@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>預約體驗課｜藍熊體能</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root {
+    --blue: #004A84;
+    --blue-light: #E8F1F8;
+    --orange: #EE792C;
+    --text: #363533;
+    --muted: #77736E;
+    --line: #DAD6D0;
+    --bg: #F7F5F2;
+    --error: #C0392B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 0 16px 120px; }
+
+  header {
+    background: var(--blue);
+    color: #fff;
+    padding: 22px 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  header img { width: 54px; height: 54px; background: #fff; border-radius: 50%; padding: 6px; }
+  header h1 { margin: 0; font-size: 21px; font-weight: 700; }
+  header p { margin: 2px 0 0; font-size: 15px; opacity: .85; }
+
+  .intro { margin: 18px 4px 6px; color: var(--muted); font-size: 15px; }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 16px 16px;
+    margin-top: 14px;
+    border: 1.5px solid transparent;
+  }
+  .card.invalid { border-color: var(--error); }
+  .q { font-weight: 700; font-size: 18px; margin: 0 0 4px; }
+  .q .num { color: var(--blue); margin-right: 4px; }
+  .hint { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  .err { color: var(--error); font-size: 14px; margin: 8px 0 0; display: none; }
+  .card.invalid .err { display: block; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1.5px solid var(--line);
+    background: #fff;
+    color: var(--text);
+    border-radius: 999px;
+    padding: 9px 16px;
+    font: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .chips.big .chip { flex: 1 1 100%; border-radius: 12px; padding: 13px 16px; text-align: left; font-size: 17px; }
+  .chips.big .chip small { display: block; font-size: 14px; opacity: .8; }
+
+  label.field { display: block; font-weight: 500; margin: 0 0 6px; }
+  input[type=text], input[type=tel], textarea {
+    width: 100%;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font: inherit;
+    color: var(--text);
+    background: #fff;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--blue); }
+  textarea { min-height: 90px; resize: vertical; }
+  .field-gap { margin-top: 14px; }
+  .other-input { margin-top: 10px; display: none; }
+  .other-input.show { display: block; }
+
+  .note { background: var(--blue-light); color: var(--blue); border-radius: 10px; padding: 10px 12px; font-size: 15px; margin-top: 12px; }
+
+  .privacy { text-align: center; color: var(--muted); font-size: 13px; margin: 18px 0 0; }
+
+  .submit-bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: rgba(247,245,242,.96);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+  }
+  .submit-bar button {
+    display: block; width: 100%; max-width: 488px; margin: 0 auto;
+    background: var(--orange); color: #fff; border: 0; border-radius: 12px;
+    padding: 15px; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer;
+  }
+  .submit-bar button:disabled { opacity: .6; }
+
+  /* 預覽模式：顯示送出後會發生什麼 */
+  .preview-tag {
+    background: #FFF4E5; color: #8A4B12; font-size: 14px; text-align: center; padding: 6px;
+  }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
+  .modal.show { display: flex; }
+  .sheet { background: #fff; width: 100%; max-width: 520px; max-height: 88vh; overflow: auto; border-radius: 18px 18px 0 0; padding: 20px 18px 28px; }
+  .sheet h2 { font-size: 18px; margin: 0 0 4px; }
+  .sheet h3 { font-size: 15px; color: var(--muted); margin: 18px 0 8px; font-weight: 500; }
+  .chat { background: #8CABD9; border-radius: 12px; padding: 14px; }
+  .bubble { background: #9FE65A; color: #111; border-radius: 14px; padding: 10px 12px; white-space: pre-wrap; font-size: 15px; margin-left: 40px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { border-bottom: 1px solid var(--line); padding: 6px 4px; vertical-align: top; }
+  td:first-child { color: var(--muted); white-space: nowrap; width: 7em; }
+  .sheet button { margin-top: 18px; width: 100%; padding: 13px; border-radius: 12px; border: 1.5px solid var(--blue); background: #fff; color: var(--blue); font: inherit; font-weight: 700; }
+
+  .done { text-align: center; padding: 80px 24px; display: none; }
+  .done.show { display: block; }
+  .done img { width: 80px; }
+  .done h2 { color: var(--blue); }
+</style>
+</head>
+<body>
+
+<div id="previewTag" class="preview-tag" hidden>預覽模式：還沒接上 LINE，按送出只會顯示「會發生什麼」</div>
+
+<header>
+  <img src="bear.png" alt="藍熊體能">
+  <div>
+    <h1>預約體驗課</h1>
+    <p>藍熊體能｜台中潭子</p>
+  </div>
+</header>
+
+<main class="wrap" id="formWrap">
+  <p class="intro">請先回答以下問題，讓教練初步認識您。大部分題目點一下就好 🙂</p>
+
+  <section class="card" data-key="course" data-type="single" data-required>
+    <p class="q"><span class="num">一、</span>您要預約哪種體驗課？</p>
+    <div class="chips big">
+      <button type="button" class="chip" data-value="一對一體驗課（690 元）">一對一體驗課<small>690 元</small></button>
+      <button type="button" class="chip" data-value="一對二體驗課（890 元）">一對二體驗課<small>890 元・兩人同行</small></button>
+    </div>
+    <p class="err">請選一項</p>
+  </section>
+
+  <section class="card" data-key="gender" data-type="single" data-required>
+    <p class="q"><span class="num">二、</span>您的性別？</p>
+    <div class="chips">
+      <button type="button" class="chip">男</button>
+      <button type="button" class="chip">女</button>
+      <button type="button" class="chip">其他</button>
+    </div>
+    <p class="err">請選一項</p>
+  </section>
+
+  <section class="card" data-key="age" data-type="single" data-required>
+    <p class="q"><span class="num">三、</span>您的年齡？</p>
+    <div class="chips">
+      <button type="button" class="chip">18 以下</button>
+      <button type="button" class="chip">18-29</button>
+      <button type="button" class="chip">30-39</button>
+      <button type="button" class="chip">40-49</button>
+      <button type="button" class="chip">50-59</button>
+      <button type="button" class="chip">60-69</button>
+      <button type="button" class="chip">70-79</button>
+      <button type="button" class="chip">80 以上</button>
+    </div>
+    <p class="err">請選一項</p>
+  </section>
+
+  <section class="card" data-key="needs" data-type="multi" data-required>
+    <p class="q"><span class="num">四、</span>您的運動需求？</p>
+    <p class="hint">可以選很多個</p>
+    <div class="chips">
+      <button type="button" class="chip">養成運動習慣、維持健康</button>
+      <button type="button" class="chip">提升肌力、體力</button>
+      <button type="button" class="chip">改善姿勢、減少痠痛</button>
+      <button type="button" class="chip">減脂、雕塑線條</button>
+      <button type="button" class="chip">增加肌肉量（變壯、增重）</button>
+      <button type="button" class="chip">產後恢復訓練</button>
+      <button type="button" class="chip">銀髮族肌力、預防跌倒</button>
+      <button type="button" class="chip">提升高爾夫表現</button>
+      <button type="button" class="chip">提升其他運動表現（羽球、跑步…）</button>
+      <button type="button" class="chip" data-other>其他</button>
+    </div>
+    <input type="text" class="other-input" placeholder="請簡單說明">
+    <p class="err">請至少選一項</p>
+  </section>
+
+  <section class="card" data-key="pain" data-type="multi" data-required>
+    <p class="q"><span class="num">五、</span>目前哪個部位有不適感？</p>
+    <p class="hint">可以選很多個，教練會特別留意</p>
+    <div class="chips">
+      <button type="button" class="chip" data-exclusive>沒有不舒服</button>
+      <button type="button" class="chip">頸部</button>
+      <button type="button" class="chip">肩膀</button>
+      <button type="button" class="chip">上背</button>
+      <button type="button" class="chip">腰部（下背）</button>
+      <button type="button" class="chip">髖關節、臀部</button>
+      <button type="button" class="chip">膝蓋</button>
+      <button type="button" class="chip">腳踝、足底</button>
+      <button type="button" class="chip">手肘、手腕</button>
+      <button type="button" class="chip" data-other>其他</button>
+    </div>
+    <input type="text" class="other-input" placeholder="請簡單說明哪裡不舒服">
+    <p class="err">請至少選一項（都沒有就選「沒有不舒服」）</p>
+  </section>
+
+  <section class="card" data-key="goal">
+    <p class="q"><span class="num">六、</span>近期有想請教練幫忙達成的目標嗎？</p>
+    <p class="hint">選填，想到什麼寫什麼</p>
+    <textarea id="goal" placeholder="例如：爬樓梯不再膝蓋痛、揮桿更穩、抱小孩不再腰痠…"></textarea>
+  </section>
+
+  <section class="card" data-key="time" data-type="multi" data-required>
+    <p class="q"><span class="num">七、</span>您比較方便的上課時段？</p>
+    <p class="hint">可以選很多個</p>
+    <div class="chips">
+      <button type="button" class="chip">平日白天</button>
+      <button type="button" class="chip">平日晚上</button>
+      <button type="button" class="chip">假日白天</button>
+      <button type="button" class="chip">假日晚上</button>
+    </div>
+    <div class="note">實際時間，教練會依空檔在 LINE 跟您確認</div>
+    <label class="field field-gap" for="timeNote">補充（選填）</label>
+    <input type="text" id="timeNote" placeholder="例如：週三晚上、下週六都可以">
+    <p class="err">請至少選一項</p>
+  </section>
+
+  <!-- 基本資料 -->
+  <section class="card" data-key="basic">
+    <p class="q">基本資料</p>
+    <label class="field" for="name">姓名</label>
+    <input type="text" id="name" autocomplete="name" placeholder="例如：王小明">
+    <label class="field field-gap" for="phone">聯絡電話</label>
+    <input type="tel" id="phone" inputmode="numeric" autocomplete="tel" placeholder="例如：0912345678">
+    <p class="err" id="basicErr">請填寫姓名和電話</p>
+  </section>
+
+  <section class="card" data-key="source" data-type="multi" data-required>
+    <p class="q"><span class="num">八、</span>您從哪裡知道藍熊體能？</p>
+    <p class="hint">可以選很多個</p>
+    <div class="chips">
+      <button type="button" class="chip">Instagram</button>
+      <button type="button" class="chip">Facebook</button>
+      <button type="button" class="chip">YouTube</button>
+      <button type="button" class="chip">官網</button>
+      <button type="button" class="chip">Google 搜尋／地圖</button>
+      <button type="button" class="chip">朋友介紹</button>
+      <button type="button" class="chip">路過看到</button>
+      <button type="button" class="chip" data-other>其他</button>
+    </div>
+    <input type="text" class="other-input" placeholder="請簡單說明">
+    <p class="err">請至少選一項</p>
+  </section>
+
+  <p class="privacy">您的資料僅用於預約聯繫與教練了解您的狀況</p>
+</main>
+
+<div class="done" id="lock">
+  <img src="bear.png" alt="">
+  <h2>請從 LINE 開啟</h2>
+  <p>這份預約表單需要在 LINE 裡填寫，<br>教練才能在 LINE 回覆您。</p>
+  <p><a id="openInLine" href="#" style="display:inline-block;margin-top:10px;background:#06C755;color:#fff;padding:12px 22px;border-radius:12px;text-decoration:none;font-weight:700">用 LINE 開啟</a></p>
+</div>
+
+<div class="done" id="done">
+  <img src="bear.png" alt="">
+  <h2>收到您的預約了！</h2>
+  <p>教練會盡快在 LINE 跟您確認上課時間 🙌</p>
+</div>
+
+<div class="submit-bar" id="submitBar">
+  <button type="button" id="submitBtn">送出預約</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h2>預覽：客人按送出後</h2>
+    <h3>① 聊天室會出現這則訊息（用客人的名義）</h3>
+    <div class="chat"><div class="bubble" id="bubble"></div></div>
+    <h3>② 試算表會新增一行</h3>
+    <table id="rowTable"></table>
+    <button type="button" id="closeModal">關閉預覽</button>
+  </div>
+</div>
+
+<script>
+// ===== 設定：接上 LINE 和試算表時再填 =====
+const LIFF_ID = "";      // LINE 後台建立 LIFF 後拿到的 ID
+const SHEET_URL = "";    // Google Apps Script 部署後的網址
+
+const previewMode = !LIFF_ID;
+let lineName = "（預覽）LINE 名稱";
+let lineUserId = "";
+// 入口：連結後面加 ?src=官網 這類標籤，沒有就當作 LINE 選單
+const ENTRY_NAMES = { menu: "LINE 選單", web: "官網", map: "Google 地圖" };
+const srcRaw = new URLSearchParams(location.search).get("src") || "menu";
+const entry = ENTRY_NAMES[srcRaw] || srcRaw;
+
+// ===== 點選按鈕 =====
+document.querySelectorAll("section[data-type]").forEach(sec => {
+  const type = sec.dataset.type;
+  const chips = sec.querySelectorAll(".chip");
+  const otherInput = sec.querySelector(".other-input");
+  chips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      if (type === "single") {
+        chips.forEach(c => c.classList.remove("on"));
+        chip.classList.add("on");
+      } else {
+        chip.classList.toggle("on");
+        if (chip.hasAttribute("data-exclusive") && chip.classList.contains("on")) {
+          chips.forEach(c => { if (c !== chip) c.classList.remove("on"); });
+        } else if (chip.classList.contains("on")) {
+          sec.querySelectorAll("[data-exclusive]").forEach(c => c.classList.remove("on"));
+        }
+      }
+      if (otherInput) {
+        const otherOn = sec.querySelector("[data-other].on");
+        otherInput.classList.toggle("show", !!otherOn);
+        if (otherOn && chip.hasAttribute("data-other")) otherInput.focus();
+      }
+      sec.classList.remove("invalid");
+    });
+  });
+});
+["name", "phone"].forEach(id =>
+  document.getElementById(id).addEventListener("input", () =>
+    document.querySelector('[data-key="basic"]').classList.remove("invalid")));
+
+// ===== 收集答案 =====
+function picked(key) {
+  const sec = document.querySelector(`[data-key="${key}"]`);
+  const other = sec.querySelector(".other-input");
+  return [...sec.querySelectorAll(".chip.on")].map(c => {
+    const v = c.dataset.value || c.textContent.trim();
+    if (c.hasAttribute("data-other") && other && other.value.trim()) return `其他：${other.value.trim()}`;
+    return v;
+  });
+}
+
+function collect() {
+  return {
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.replace(/\s|-/g, ""),
+    course: picked("course")[0] || "",
+    gender: picked("gender")[0] || "",
+    age: picked("age")[0] || "",
+    needs: picked("needs"),
+    pain: picked("pain"),
+    goal: document.getElementById("goal").value.trim(),
+    time: picked("time"),
+    timeNote: document.getElementById("timeNote").value.trim(),
+    source: picked("source"),
+  };
+}
+
+function validate(d) {
+  let firstBad = null;
+  const mark = (key, bad) => {
+    const sec = document.querySelector(`[data-key="${key}"]`);
+    sec.classList.toggle("invalid", bad);
+    if (bad && !firstBad) firstBad = sec;
+  };
+  const phoneOk = /^0\d{8,9}$/.test(d.phone);
+  document.getElementById("basicErr").textContent =
+    !d.name || !d.phone ? "請填寫姓名和電話" : "電話格式好像不太對，請再確認";
+  mark("course", !d.course);
+  mark("gender", !d.gender);
+  mark("age", !d.age);
+  mark("needs", d.needs.length === 0);
+  mark("pain", d.pain.length === 0);
+  mark("time", d.time.length === 0);
+  mark("basic", !d.name || !phoneOk);
+  mark("source", d.source.length === 0);
+  if (firstBad) firstBad.scrollIntoView({ behavior: "smooth", block: "center" });
+  return !firstBad;
+}
+
+function chatText(d) {
+  const time = d.time.join("，") + (d.timeNote ? `（${d.timeNote}）` : "");
+  return [
+    "【預約體驗課】",
+    `姓名：${d.name}`,
+    `電話：${d.phone}`,
+    `體驗課：${d.course}`,
+    `性別／年齡：${d.gender}／${d.age}`,
+    `運動需求：${d.needs.join("，")}`,
+    `不適部位：${d.pain.join("，")}`,
+    `近期目標：${d.goal || "（未填）"}`,
+    `方便時段：${time}`,
+    `從哪裡知道：${d.source.join("，")}`,
+  ].join("\n");
+}
+
+// ===== 送出 =====
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const d = collect();
+  if (!validate(d)) return;
+  const text = chatText(d);
+  const row = {
+    填寫時間: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false }),
+    入口: entry,
+    LINE名稱: lineName,
+    姓名: d.name, 電話: d.phone, 體驗課: d.course, 性別: d.gender, 年齡: d.age,
+    運動需求: d.needs.join("，"), 不適部位: d.pain.join("，"), 近期目標: d.goal,
+    方便時段: d.time.join("，"), 時段補充: d.timeNote, 從哪裡知道: d.source.join("，"),
+  };
+
+  if (previewMode) {
+    document.getElementById("bubble").textContent = text;
+    document.getElementById("rowTable").innerHTML = Object.entries(row)
+      .map(([k, v]) => `<tr><td>${k}</td><td>${(v || "—").replace(/</g, "&lt;")}</td></tr>`).join("");
+    document.getElementById("modal").classList.add("show");
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "送出中…";
+  try {
+    // 先存進試算表（最多等 6 秒；失敗也不擋住客人，聊天室訊息最重要）
+    if (SHEET_URL) {
+      const save = fetch(SHEET_URL, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ ...row, LINE編號: lineUserId }),
+      }).catch(() => {});
+      await Promise.race([save, new Promise(r => setTimeout(r, 6000))]);
+    }
+    await liff.sendMessages([{ type: "text", text }]);
+    document.getElementById("formWrap").style.display = "none";
+    document.getElementById("submitBar").style.display = "none";
+    document.getElementById("done").classList.add("show");
+    setTimeout(() => liff.closeWindow(), 2500);
+  } catch (e) {
+    alert("送出失敗，請再試一次，或直接在聊天室跟我們說 🙏");
+    btn.disabled = false; btn.textContent = "送出預約";
+  }
+});
+document.getElementById("closeModal").addEventListener("click", () =>
+  document.getElementById("modal").classList.remove("show"));
+
+// ===== 啟動 =====
+if (previewMode) {
+  document.getElementById("previewTag").hidden = false;
+} else {
+  // LINE 鎖：不是在 LINE 裡打開，就不顯示題目
+  const lock = () => {
+    document.getElementById("formWrap").style.display = "none";
+    document.getElementById("submitBar").style.display = "none";
+    document.getElementById("openInLine").href =
+      `https://liff.line.me/${LIFF_ID}?src=${encodeURIComponent(srcRaw)}`;
+    document.getElementById("lock").classList.add("show");
+  };
+  document.getElementById("formWrap").style.visibility = "hidden";
+  liff.init({ liffId: LIFF_ID }).then(async () => {
+    if (!liff.isInClient()) { lock(); return; }
+    document.getElementById("formWrap").style.visibility = "visible";
+    const p = await liff.getProfile();
+    lineName = p.displayName;
+    lineUserId = p.userId;
+  }).catch(lock);
+}
+</script>
+</body>
+</html>
