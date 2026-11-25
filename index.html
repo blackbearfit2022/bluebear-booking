@@ -279,15 +279,15 @@
 
 <div class="done" id="lock">
   <img src="bear.png" alt="">
-  <h2>請從 LINE 開啟</h2>
-  <p>這份預約表單需要在 LINE 裡填寫，<br>教練才能在 LINE 回覆您。</p>
+  <h2>表單打不開</h2>
+  <p>請改用手機 LINE 開啟，<br>或直接在 LINE 聊天室跟我們說 🙏</p>
   <p><a id="openInLine" href="#" style="display:inline-block;margin-top:10px;background:#06C755;color:#fff;padding:12px 22px;border-radius:12px;text-decoration:none;font-weight:700">用 LINE 開啟</a></p>
 </div>
 
 <div class="done" id="done">
   <img src="bear.png" alt="">
   <h2>收到您的預約了！</h2>
-  <p>教練會盡快在 LINE 跟您確認上課時間 🙌</p>
+  <p id="doneMsg">教練會盡快在 LINE 跟您確認上課時間 🙌</p>
 </div>
 
 <div class="submit-bar" id="submitBar">
@@ -313,6 +313,7 @@ const SHEET_URL = "https://script.google.com/macros/s/AKfycbxAQb1Krbu_4RTZED_u5T
 const previewMode = !LIFF_ID;
 let lineName = "（預覽）LINE 名稱";
 let lineUserId = "";
+let inClient = false;  // true＝手機 LINE 裡打開；false＝電腦／瀏覽器
 // 入口：連結後面加 ?src=官網 這類標籤，沒有就當作 LINE 選單
 const ENTRY_NAMES = { menu: "LINE 選單", web: "官網", map: "Google 地圖" };
 const srcRaw = new URLSearchParams(location.search).get("src") || "menu";
@@ -425,6 +426,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
     姓名: d.name, 電話: d.phone, 體驗課: d.course, 性別: d.gender, 年齡: d.age,
     運動需求: d.needs.join("，"), 不適部位: d.pain.join("，"), 近期目標: d.goal,
     方便時段: d.time.join("，"), 時段補充: d.timeNote, 從哪裡知道: d.source.join("，"),
+    填寫方式: previewMode ? "（預覽）" : (inClient ? "手機 LINE" : "電腦／瀏覽器"),
   };
 
   if (previewMode) {
@@ -438,20 +440,29 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   const btn = document.getElementById("submitBtn");
   btn.disabled = true; btn.textContent = "送出中…";
   try {
-    // 先存進試算表（最多等 6 秒；失敗也不擋住客人，聊天室訊息最重要）
-    if (SHEET_URL) {
-      const save = fetch(SHEET_URL, {
-        method: "POST", mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ ...row, LINE編號: lineUserId }),
-      }).catch(() => {});
-      await Promise.race([save, new Promise(r => setTimeout(r, 6000))]);
+    const payload = JSON.stringify({
+      ...row, 訊息: text, accessToken: liff.getAccessToken() || "",
+    });
+    const save = fetch(SHEET_URL, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: payload,
+    });
+    if (inClient) {
+      // 手機：客人名義傳進聊天室（最重要），試算表最多等 8 秒
+      await Promise.race([save.catch(() => {}), new Promise(r => setTimeout(r, 8000))]);
+      await liff.sendMessages(messages);
+    } else {
+      // 電腦：一定要存成功，官方帳號才會傳確認訊息
+      await save;
+      document.getElementById("doneMsg").innerHTML =
+        "藍熊官方帳號已在 LINE 傳確認訊息給您，<br>教練會盡快跟您確認上課時間 🙌";
     }
-    await liff.sendMessages(messages);
     document.getElementById("formWrap").style.display = "none";
     document.getElementById("submitBar").style.display = "none";
     document.getElementById("done").classList.add("show");
-    setTimeout(() => liff.closeWindow(), 2500);
+    window.scrollTo(0, 0);
+    if (inClient) setTimeout(() => liff.closeWindow(), 2500);
   } catch (e) {
     alert("送出失敗，請再試一次，或直接在聊天室跟我們說 🙏");
     btn.disabled = false; btn.textContent = "送出預約";
@@ -464,7 +475,7 @@ document.getElementById("closeModal").addEventListener("click", () =>
 if (previewMode) {
   document.getElementById("previewTag").hidden = false;
 } else {
-  // LINE 鎖：不是在 LINE 裡打開，就不顯示題目
+  // 載入失敗時顯示的畫面
   const lock = () => {
     document.getElementById("formWrap").style.display = "none";
     document.getElementById("submitBar").style.display = "none";
@@ -474,7 +485,9 @@ if (previewMode) {
   };
   document.getElementById("formWrap").style.visibility = "hidden";
   liff.init({ liffId: LIFF_ID }).then(async () => {
-    if (!liff.isInClient()) { lock(); return; }
+    // 電腦／瀏覽器：先用 LINE 帳號登入，才知道是誰、能傳確認訊息
+    if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+    inClient = liff.isInClient();
     document.getElementById("formWrap").style.visibility = "visible";
     const p = await liff.getProfile();
     lineName = p.displayName;
