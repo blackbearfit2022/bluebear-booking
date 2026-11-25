@@ -340,6 +340,7 @@ const previewMode = !LIFF_ID || ["127.0.0.1", "localhost"].includes(location.hos
 let lineName = "（預覽）LINE 名稱";
 let lineUserId = "";
 let inClient = false;  // true＝手機 LINE 裡打開；false＝電腦／瀏覽器
+let inChat = false;    // true＝從聊天室打開，才能用客人名義傳訊息
 // 入口：連結後面加 ?src=官網 這類標籤，沒有就當作 LINE 選單
 const ENTRY_NAMES = { menu: "LINE 選單", web: "官網", map: "Google 地圖" };
 // LINE 會把 ?src=web 包在 liff.state 裡傳過來，兩種都要讀
@@ -456,7 +457,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
     姓名: d.name, 電話: d.phone, 體驗課: d.course, 性別: d.gender, 年齡: d.age,
     運動需求: d.needs.join("，"), 不適部位: d.pain.join("，"), 近期目標: d.goal,
     方便時段: d.time.join("，"), 時段補充: d.timeNote, 從哪裡知道: d.source.join("，"),
-    填寫方式: previewMode ? "（預覽）" : (inClient ? "手機 LINE" : "電腦／瀏覽器"),
+    填寫方式: previewMode ? "（預覽）" : (inChat ? "手機 LINE" : (inClient ? "手機 LINE（非聊天室）" : "電腦／瀏覽器")),
   };
 
   if (previewMode) {
@@ -478,7 +479,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: payload,
     });
-    if (inClient) {
+    if (inChat) {
       // 手機：客人名義傳進聊天室（最重要），試算表最多等 8 秒
       await Promise.race([save.catch(() => {}), new Promise(r => setTimeout(r, 8000))]);
       await liff.sendMessages(messages);
@@ -518,6 +519,8 @@ if (previewMode) {
     // 電腦／瀏覽器：先用 LINE 帳號登入，才知道是誰、能傳確認訊息
     if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
     inClient = liff.isInClient();
+    const ctx = liff.getContext();
+    inChat = inClient && !!ctx && ["utou", "group", "room", "square_chat"].includes(ctx.type);
     document.getElementById("formWrap").style.visibility = "visible";
     const p = await liff.getProfile();
     lineName = p.displayName;
