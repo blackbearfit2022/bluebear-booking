@@ -47,6 +47,16 @@
   header p { margin: 2px 0 0; font-size: 15px; color: var(--muted); }
 
   .intro { margin: 18px 4px 6px; color: var(--muted); font-size: 15px; }
+  .flow { background: var(--card); border-radius: 14px; padding: 18px 16px 14px; margin-top: 16px; box-shadow: 0 1px 3px rgba(80,60,30,.06); }
+  .flow h2 { font-size: 18px; margin: 0 0 12px; color: #004A84; }
+  .step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; }
+  .step + .step { border-top: 1px dashed var(--line); }
+  .step .ico { flex: 0 0 46px; height: 46px; border-radius: 50%; background: var(--orange-light); display: flex; align-items: center; justify-content: center; }
+  .step .ico svg { width: 24px; height: 24px; stroke: var(--orange); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .step b { display: block; font-size: 17px; color: var(--text); }
+  .step b span { color: var(--orange); margin-right: 4px; }
+  .step p { margin: 2px 0 0; font-size: 15px; color: var(--muted); line-height: 1.55; }
+  .flow .price { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 15px; color: var(--blue); font-weight: 500; text-align: center; }
 
   .card {
     background: var(--card);
@@ -150,6 +160,22 @@
 </header>
 
 <main class="wrap" id="formWrap">
+  <section class="flow">
+    <h2>體驗課流程</h2>
+    <div class="step">
+      <div class="ico"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M9 12l2 2 4-4"/><path d="M9 17h6"/></svg></div>
+      <div><b><span>①</span>評估</b><p>執行一套動作能力檢測（檢查姿勢、關節活動度與肌力）</p></div>
+    </div>
+    <div class="step">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8"/><path d="M8 12h5"/></svg></div>
+      <div><b><span>②</span>說明</b><p>依照評估結果，搭配您的需求、身體狀況，共同討論後續課程規劃</p></div>
+    </div>
+    <div class="step">
+      <div class="ico"><svg viewBox="0 0 24 24"><path d="M6 8v8M3 10v4M18 8v8M21 10v4M6 12h12"/></svg></div>
+      <div><b><span>③</span>訓練</b><p>實際感受教練的教學風格</p></div>
+    </div>
+  </section>
+
   <p class="intro">請先回答以下問題，讓教練初步認識您。大部分題目點一下就好 🙂</p>
 
   <section class="card" data-key="course" data-type="single" data-required>
@@ -310,7 +336,7 @@
 const LIFF_ID = "2012791099-PrAed74u";      // LINE 後台建立 LIFF 後拿到的 ID
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxAQb1Krbu_4RTZED_u5T7wJhZJW-fE8a-ldyU6DkMZMlO9Th9NXCcKnDbmTMIuoz1s/exec";    // Google Apps Script 部署後的網址
 
-const previewMode = !LIFF_ID;
+const previewMode = !LIFF_ID || ["127.0.0.1", "localhost"].includes(location.hostname);
 let lineName = "（預覽）LINE 名稱";
 let lineUserId = "";
 let inClient = false;  // true＝手機 LINE 裡打開；false＝電腦／瀏覽器
