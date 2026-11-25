@@ -10,13 +10,15 @@
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
   :root {
-    --blue: #004A84;
-    --blue-light: #E8F1F8;
+    --blue: #0066A8;
+    --blue-light: #E6EEF5;
+    --orange-light: #FCEBDD;
+    --card: #FFFCF6;
     --orange: #EE792C;
     --text: #363533;
     --muted: #77736E;
-    --line: #DAD6D0;
-    --bg: #F7F5F2;
+    --line: #E3DACB;
+    --bg: #F6F2EA;
     --error: #C0392B;
   }
   * { box-sizing: border-box; }
@@ -32,29 +34,33 @@
   .wrap { max-width: 520px; margin: 0 auto; padding: 0 16px 120px; }
 
   header {
-    background: var(--blue);
-    color: #fff;
-    padding: 22px 20px 20px;
+    background: #FFFDF9;
+    color: var(--blue);
+    padding: 18px 20px 16px;
     display: flex;
     align-items: center;
     gap: 14px;
+    border-bottom: 4px solid var(--orange);
   }
-  header img { width: 54px; height: 54px; background: #fff; border-radius: 50%; padding: 6px; }
-  header h1 { margin: 0; font-size: 21px; font-weight: 700; }
-  header p { margin: 2px 0 0; font-size: 15px; opacity: .85; }
+  header img { width: 52px; height: auto; display: block; }
+  header h1 { margin: 0; font-size: 21px; font-weight: 700; color: #004A84; }
+  header p { margin: 2px 0 0; font-size: 15px; color: var(--muted); }
 
   .intro { margin: 18px 4px 6px; color: var(--muted); font-size: 15px; }
 
   .card {
-    background: #fff;
+    background: var(--card);
     border-radius: 14px;
     padding: 18px 16px 16px;
+    box-shadow: 0 1px 3px rgba(80,60,30,.06);
     margin-top: 14px;
     border: 1.5px solid transparent;
   }
   .card.invalid { border-color: var(--error); }
   .q { font-weight: 700; font-size: 18px; margin: 0 0 4px; }
-  .q .num { color: var(--blue); margin-right: 4px; }
+  .q .num { color: var(--orange); margin-right: 4px; }
+  .req { color: var(--error); font-size: 15px; margin-left: 4px; font-weight: 500; }
+  .opt { color: var(--muted); font-size: 14px; margin-left: 4px; font-weight: 400; }
   .hint { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
   .err { color: var(--error); font-size: 14px; margin: 8px 0 0; display: none; }
   .card.invalid .err { display: block; }
@@ -62,7 +68,7 @@
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
     border: 1.5px solid var(--line);
-    background: #fff;
+    background: #FFFDF9;
     color: var(--text);
     border-radius: 999px;
     padding: 9px 16px;
@@ -74,6 +80,7 @@
   .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
   .chips.big .chip { flex: 1 1 100%; border-radius: 12px; padding: 13px 16px; text-align: left; font-size: 17px; }
   .chips.big .chip small { display: block; font-size: 14px; opacity: .8; }
+  .chip.on, .chip.on small { color: #fff; opacity: 1; }
 
   label.field { display: block; font-weight: 500; margin: 0 0 6px; }
   input[type=text], input[type=tel], textarea {
@@ -83,7 +90,7 @@
     padding: 11px 12px;
     font: inherit;
     color: var(--text);
-    background: #fff;
+    background: #FFFDF9;
   }
   input:focus, textarea:focus { outline: none; border-color: var(--blue); }
   textarea { min-height: 90px; resize: vertical; }
@@ -91,13 +98,13 @@
   .other-input { margin-top: 10px; display: none; }
   .other-input.show { display: block; }
 
-  .note { background: var(--blue-light); color: var(--blue); border-radius: 10px; padding: 10px 12px; font-size: 15px; margin-top: 12px; }
+  .note { background: var(--orange-light); color: #9A4A14; border-radius: 10px; padding: 10px 12px; font-size: 15px; margin-top: 12px; }
 
   .privacy { text-align: center; color: var(--muted); font-size: 13px; margin: 18px 0 0; }
 
   .submit-bar {
     position: fixed; left: 0; right: 0; bottom: 0;
-    background: rgba(247,245,242,.96);
+    background: rgba(246,242,234,.96);
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--line);
   }
@@ -146,25 +153,26 @@
   <p class="intro">請先回答以下問題，讓教練初步認識您。大部分題目點一下就好 🙂</p>
 
   <section class="card" data-key="course" data-type="single" data-required>
-    <p class="q"><span class="num">一、</span>您要預約哪種體驗課？</p>
+    <p class="q"><span class="num">一、</span>您要預約哪種體驗課？<span class="req">*必填</span></p>
     <div class="chips big">
       <button type="button" class="chip" data-value="一對一體驗課（690 元）">一對一體驗課<small>690 元</small></button>
-      <button type="button" class="chip" data-value="一對二體驗課（890 元）">一對二體驗課<small>890 元・兩人同行</small></button>
+      <button type="button" class="chip" data-value="一對二體驗課（890 元）">一對二體驗課<small>890 元・兩人總額</small></button>
     </div>
     <p class="err">請選一項</p>
   </section>
 
-  <section class="card" data-key="gender" data-type="single" data-required>
+  <section class="card" data-key="gender" data-type="single">
     <p class="q"><span class="num">二、</span>您的性別？</p>
     <div class="chips">
       <button type="button" class="chip">男</button>
       <button type="button" class="chip">女</button>
-      <button type="button" class="chip">其他</button>
+      <button type="button" class="chip" data-other>其他</button>
     </div>
+    <input type="text" class="other-input" placeholder="請說明（選填）">
     <p class="err">請選一項</p>
   </section>
 
-  <section class="card" data-key="age" data-type="single" data-required>
+  <section class="card" data-key="age" data-type="single">
     <p class="q"><span class="num">三、</span>您的年齡？</p>
     <div class="chips">
       <button type="button" class="chip">18 以下</button>
@@ -179,9 +187,9 @@
     <p class="err">請選一項</p>
   </section>
 
-  <section class="card" data-key="needs" data-type="multi" data-required>
+  <section class="card" data-key="needs" data-type="multi">
     <p class="q"><span class="num">四、</span>您的運動需求？</p>
-    <p class="hint">可以選很多個</p>
+    <p class="hint">可選多個</p>
     <div class="chips">
       <button type="button" class="chip">養成運動習慣、維持健康</button>
       <button type="button" class="chip">提升肌力、體力</button>
@@ -198,9 +206,9 @@
     <p class="err">請至少選一項</p>
   </section>
 
-  <section class="card" data-key="pain" data-type="multi" data-required>
+  <section class="card" data-key="pain" data-type="multi">
     <p class="q"><span class="num">五、</span>目前哪個部位有不適感？</p>
-    <p class="hint">可以選很多個，教練會特別留意</p>
+    <p class="hint">可選多個，教練會特別留意</p>
     <div class="chips">
       <button type="button" class="chip" data-exclusive>沒有不舒服</button>
       <button type="button" class="chip">頸部</button>
@@ -219,20 +227,20 @@
 
   <section class="card" data-key="goal">
     <p class="q"><span class="num">六、</span>近期有想請教練幫忙達成的目標嗎？</p>
-    <p class="hint">選填，想到什麼寫什麼</p>
+    <p class="hint">想到什麼寫什麼</p>
     <textarea id="goal" placeholder="例如：爬樓梯不再膝蓋痛、揮桿更穩、抱小孩不再腰痠…"></textarea>
   </section>
 
   <section class="card" data-key="time" data-type="multi" data-required>
-    <p class="q"><span class="num">七、</span>您比較方便的上課時段？</p>
-    <p class="hint">可以選很多個</p>
+    <p class="q"><span class="num">七、</span>您比較方便的上課時段？<span class="req">*必填</span></p>
+    <p class="hint">可選多個</p>
     <div class="chips">
       <button type="button" class="chip">平日白天</button>
       <button type="button" class="chip">平日晚上</button>
       <button type="button" class="chip">假日白天</button>
       <button type="button" class="chip">假日晚上</button>
     </div>
-    <div class="note">實際時間，教練會依空檔在 LINE 跟您確認</div>
+    <div class="note">實際時間，會依教練空檔在 LINE 跟您確認</div>
     <label class="field field-gap" for="timeNote">補充（選填）</label>
     <input type="text" id="timeNote" placeholder="例如：週三晚上、下週六都可以">
     <p class="err">請至少選一項</p>
@@ -240,7 +248,7 @@
 
   <!-- 基本資料 -->
   <section class="card" data-key="basic">
-    <p class="q">基本資料</p>
+    <p class="q"><span class="num">八、</span>基本資料<span class="req">*必填</span></p>
     <label class="field" for="name">姓名</label>
     <input type="text" id="name" autocomplete="name" placeholder="例如：王小明">
     <label class="field field-gap" for="phone">聯絡電話</label>
@@ -248,12 +256,13 @@
     <p class="err" id="basicErr">請填寫姓名和電話</p>
   </section>
 
-  <section class="card" data-key="source" data-type="multi" data-required>
-    <p class="q"><span class="num">八、</span>您從哪裡知道藍熊體能？</p>
-    <p class="hint">可以選很多個</p>
+  <section class="card" data-key="source" data-type="multi">
+    <p class="q"><span class="num">九、</span>您從哪裡知道藍熊體能？</p>
+    <p class="hint">可選多個</p>
     <div class="chips">
       <button type="button" class="chip">Instagram</button>
       <button type="button" class="chip">Facebook</button>
+      <button type="button" class="chip">Threads</button>
       <button type="button" class="chip">YouTube</button>
       <button type="button" class="chip">官網</button>
       <button type="button" class="chip">Google 搜尋／地圖</button>
@@ -378,30 +387,26 @@ function validate(d) {
   document.getElementById("basicErr").textContent =
     !d.name || !d.phone ? "請填寫姓名和電話" : "電話格式好像不太對，請再確認";
   mark("course", !d.course);
-  mark("gender", !d.gender);
-  mark("age", !d.age);
-  mark("needs", d.needs.length === 0);
-  mark("pain", d.pain.length === 0);
   mark("time", d.time.length === 0);
   mark("basic", !d.name || !phoneOk);
-  mark("source", d.source.length === 0);
   if (firstBad) firstBad.scrollIntoView({ behavior: "smooth", block: "center" });
   return !firstBad;
 }
 
 function chatText(d) {
+  const na = v => (Array.isArray(v) ? v.join("，") : v) || "（未填）";
   const time = d.time.join("，") + (d.timeNote ? `（${d.timeNote}）` : "");
   return [
     "【預約體驗課】",
     `姓名：${d.name}`,
     `電話：${d.phone}`,
     `體驗課：${d.course}`,
-    `性別／年齡：${d.gender}／${d.age}`,
-    `運動需求：${d.needs.join("，")}`,
-    `不適部位：${d.pain.join("，")}`,
+    `性別／年齡：${na(d.gender)}／${na(d.age)}`,
+    `運動需求：${na(d.needs)}`,
+    `不適部位：${na(d.pain)}`,
     `近期目標：${d.goal || "（未填）"}`,
     `方便時段：${time}`,
-    `從哪裡知道：${d.source.join("，")}`,
+    `從哪裡知道：${na(d.source)}`,
   ].join("\n");
 }
 
