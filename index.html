@@ -406,7 +406,6 @@ function chatText(d) {
     `不適部位：${na(d.pain)}`,
     `近期目標：${d.goal || "（未填）"}`,
     `方便時段：${time}`,
-    `從哪裡知道：${na(d.source)}`,
   ].join("\n");
 }
 
@@ -415,6 +414,10 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   const d = collect();
   if (!validate(d)) return;
   const text = chatText(d);
+  // 「從哪裡知道」另外一則（沒填就不傳）
+  const sourceText = d.source.length ? `從哪裡知道藍熊：${d.source.join("，")}` : "";
+  const messages = [{ type: "text", text }];
+  if (sourceText) messages.push({ type: "text", text: sourceText });
   const row = {
     填寫時間: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false }),
     入口: entry,
@@ -425,7 +428,10 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   };
 
   if (previewMode) {
-    document.getElementById("bubble").textContent = text;
+    document.getElementById("bubble").textContent = text + (sourceText ? "
+
+――（第二則）――
+" + sourceText : "");
     document.getElementById("rowTable").innerHTML = Object.entries(row)
       .map(([k, v]) => `<tr><td>${k}</td><td>${(v || "—").replace(/</g, "&lt;")}</td></tr>`).join("");
     document.getElementById("modal").classList.add("show");
@@ -444,7 +450,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
       }).catch(() => {});
       await Promise.race([save, new Promise(r => setTimeout(r, 6000))]);
     }
-    await liff.sendMessages([{ type: "text", text }]);
+    await liff.sendMessages(messages);
     document.getElementById("formWrap").style.display = "none";
     document.getElementById("submitBar").style.display = "none";
     document.getElementById("done").classList.add("show");
