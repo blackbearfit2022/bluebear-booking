@@ -428,10 +428,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   };
 
   if (previewMode) {
-    document.getElementById("bubble").textContent = text + (sourceText ? "
-
-――（第二則）――
-" + sourceText : "");
+    document.getElementById("bubble").textContent = text + (sourceText ? "\n\n――（第二則）――\n" + sourceText : "");
     document.getElementById("rowTable").innerHTML = Object.entries(row)
       .map(([k, v]) => `<tr><td>${k}</td><td>${(v || "—").replace(/</g, "&lt;")}</td></tr>`).join("");
     document.getElementById("modal").classList.add("show");
