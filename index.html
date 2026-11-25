@@ -316,7 +316,13 @@ let lineUserId = "";
 let inClient = false;  // true＝手機 LINE 裡打開；false＝電腦／瀏覽器
 // 入口：連結後面加 ?src=官網 這類標籤，沒有就當作 LINE 選單
 const ENTRY_NAMES = { menu: "LINE 選單", web: "官網", map: "Google 地圖" };
-const srcRaw = new URLSearchParams(location.search).get("src") || "menu";
+// LINE 會把 ?src=web 包在 liff.state 裡傳過來，兩種都要讀
+const srcRaw = (() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get("src")) return q.get("src");
+  const state = q.get("liff.state") || "";
+  return new URLSearchParams(state.split("?")[1] || "").get("src") || "menu";
+})();
 const entry = ENTRY_NAMES[srcRaw] || srcRaw;
 
 // ===== 點選按鈕 =====
