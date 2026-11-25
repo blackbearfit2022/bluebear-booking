@@ -314,6 +314,10 @@
   <img src="bear.png" alt="">
   <h2>收到您的預約了！</h2>
   <p id="doneMsg">教練會盡快在 LINE 跟您確認上課時間 🙌</p>
+  <div id="addFriend" hidden>
+    <p style="margin-top:18px">您還不是藍熊體能的 LINE 好友，<br>加入後教練才能在 LINE 跟您確認時間喔！</p>
+    <a href="https://line.me/R/ti/p/@813lobhs" style="display:inline-block;margin-top:6px;background:#06C755;color:#fff;padding:13px 24px;border-radius:12px;text-decoration:none;font-weight:700">加入 LINE 好友</a>
+  </div>
 </div>
 
 <div class="submit-bar" id="submitBar">
@@ -493,7 +497,15 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
     document.getElementById("submitBar").style.display = "none";
     document.getElementById("done").classList.add("show");
     window.scrollTo(0, 0);
-    if (inClient) setTimeout(() => liff.closeWindow(), 2500);
+    // 還不是好友：顯示加好友按鈕，不自動關閉
+    let isFriend = true;
+    try { isFriend = (await liff.getFriendship()).friendFlag; } catch (e) {}
+    if (!isFriend) {
+      document.getElementById("doneMsg").innerHTML = "教練會盡快跟您確認上課時間 🙌";
+      document.getElementById("addFriend").hidden = false;
+    } else if (inClient) {
+      setTimeout(() => liff.closeWindow(), 2500);
+    }
   } catch (e) {
     alert("送出失敗，請再試一次，或直接在聊天室跟我們說 🙏");
     btn.disabled = false; btn.textContent = "送出預約";
