@@ -104,6 +104,15 @@
   .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
   .dots i.on { background: var(--blue); }
 
+  /* 學員回饋 */
+  .quote { position: relative; padding-top: 22px; }
+  .quote::before {
+    content: "\201C"; position: absolute; left: 14px; top: -2px;
+    font-size: 44px; line-height: 1; color: var(--orange); font-family: Georgia, serif;
+  }
+  .q-text { font-size: 16px; }
+  .q-who { margin-top: 8px !important; font-size: 14px; color: var(--muted); text-align: right; }
+
   /* 影片（點了才載入） */
   .video {
     position: relative; width: 100%; max-width: 280px; margin: 14px auto 0;
@@ -259,7 +268,7 @@
 </header>
 
 <nav id="tabs">
-  <button data-tab="env">環境</button>
+  <button data-tab="fb">回饋</button>
   <button data-tab="course">課程</button>
   <button data-tab="coach">教練</button>
   <button data-tab="price">費用</button>
@@ -268,22 +277,21 @@
 
 <main class="wrap">
 
-  <!-- 環境 -->
-  <section id="env">
-    <h2>教室環境</h2>
-    <p class="lead">小班制、預約制的私人教室，上課時間只有你和教練，不用跟人搶器材，也不怕被人看。</p>
+  <!-- 學員回饋 -->
+  <section id="fb">
+    <h2>學員怎麼說</h2>
+    <p class="lead">來聽聽在藍熊練習的學員，他們的改變。</p>
 
-    <div class="gallery" id="gallery">
-      <figure><img src="img/env1.jpg" alt="訓練區" loading="lazy"><figcaption>寬敞的訓練區</figcaption></figure>
-      <figure><img src="img/env2.jpg" alt="訓練架與器材" loading="lazy"><figcaption>專業訓練架與器材</figcaption></figure>
-      <figure><img src="img/env3.jpg" alt="窗邊休息區" loading="lazy"><figcaption>明亮的窗邊休息區</figcaption></figure>
-      <figure><img src="img/env4.jpg" alt="一樓接待區" loading="lazy"><figcaption>一樓接待區</figcaption></figure>
-      <figure><img src="img/env5.jpg" alt="啞鈴壺鈴區" loading="lazy"><figcaption>啞鈴、壺鈴區</figcaption></figure>
-      <figure><img src="img/env6.jpg" alt="廁所" loading="lazy" style="object-position:50% 60%"><figcaption>乾淨的廁所</figcaption></figure>
+    <!-- 待補：珊老闆提供學員回饋文字或 Google 評論 -->
+    <div class="card quote"><p class="q-text">（學員回饋待補）</p><p class="q-who">— 學員稱呼｜練習多久</p></div>
+    <div class="card quote"><p class="q-text">（學員回饋待補）</p><p class="q-who">— 學員稱呼｜練習多久</p></div>
+    <div class="card quote"><p class="q-text">（學員回饋待補）</p><p class="q-who">— 學員稱呼｜練習多久</p></div>
+
+    <div class="card">
+      <h3>學員故事</h3>
+      <div class="video" data-id="Q9FY0dpmIW0"></div>
+      <p class="vtitle">九個月後，家人發現了她的變化</p>
     </div>
-    <div class="dots" id="dots"></div>
-
-    <div class="video-soon">🎬 教室導覽影片拍攝中，敬請期待</div>
   </section>
 
   <!-- 課程 -->
@@ -472,20 +480,20 @@
   var LIFF_ID = "2012791099-PrAed74u";
   // 從選單／歡迎訊息打開時，用客人名義傳進聊天室的文字（網址加 ?m=xxx）
   var MESSAGES = {
-    env: "教室環境",
+    fb: "學員回饋",
     course: "課程介紹",
     coach: "教練介紹",
     price: "課程費用",
     map: "教室位置",
     intro: "藍熊介紹"
   };
-  var TABS = ["env", "course", "coach", "price", "map"];
+  var TABS = ["fb", "course", "coach", "price", "map"];
 
   // ===== 分頁切換 =====
   var params = new URLSearchParams(location.search);
   var viewed = {};
   function showTab(tab, fromClick) {
-    if (TABS.indexOf(tab) < 0) tab = "env";
+    if (TABS.indexOf(tab) < 0) tab = "course";
     TABS.forEach(function (t) {
       document.getElementById(t).classList.toggle("on", t === tab);
     });
@@ -498,7 +506,7 @@
   document.querySelectorAll("#tabs button").forEach(function (b) {
     b.addEventListener("click", function () { showTab(b.dataset.tab, true); });
   });
-  showTab(params.get("tab") || "env");
+  showTab(params.get("tab") || "course");
 
   // ===== 影片：點了才載入，頁面比較快 =====
   document.querySelectorAll(".video").forEach(function (v) {
@@ -511,19 +519,6 @@
       track("video", id);
     }, { once: true });
   });
-
-  // ===== 照片輪播小圓點 =====
-  (function () {
-    var g = document.getElementById("gallery"), d = document.getElementById("dots");
-    var n = g.children.length;
-    for (var i = 0; i < n; i++) d.appendChild(document.createElement("i"));
-    function upd() {
-      var idx = Math.round(g.scrollLeft / (g.children[0].offsetWidth + 10));
-      [].forEach.call(d.children, function (el, i) { el.classList.toggle("on", i === idx); });
-    }
-    g.addEventListener("scroll", upd, { passive: true });
-    upd();
-  })();
 
   document.getElementById("ctaBtn").addEventListener("click", function () { track("book_click", ""); });
 
