@@ -105,6 +105,13 @@
   .dots i.on { background: var(--blue); }
 
   /* 學員回饋 */
+  .g-score {
+    display: flex; align-items: center; gap: 12px; margin: 4px 4px 4px;
+    text-decoration: none; color: var(--text);
+  }
+  .g-score strong { font-size: 40px; line-height: 1; color: var(--blue-dark); font-weight: 700; }
+  .g-score b { display: block; color: #F2A20C; font-size: 18px; letter-spacing: 2px; font-weight: 400; }
+  .g-score small { display: block; font-size: 14px; color: var(--muted); }
   .quote { position: relative; padding-top: 22px; }
   .quote::before {
     content: "\201C"; position: absolute; left: 14px; top: -2px;
@@ -281,12 +288,28 @@
   <!-- 學員回饋 -->
   <section id="fb">
     <h2>學員怎麼說</h2>
-    <p class="lead">來聽聽在藍熊練習的學員，他們的改變。</p>
+    <a class="g-score" href="https://maps.app.goo.gl/ThQbtBT6MzpRtrHK8" target="_blank" rel="noopener">
+      <strong>5.0</strong>
+      <span><b>★★★★★</b><small>Google 評論 51 則・看全部 ›</small></span>
+    </a>
 
-    <!-- 待補：珊老闆提供學員回饋文字或 Google 評論 -->
-    <div class="card quote"><p class="q-text">（學員回饋待補）</p><p class="q-who">— 學員稱呼｜練習多久</p></div>
-    <div class="card quote"><p class="q-text">（學員回饋待補）</p><p class="q-who">— 學員稱呼｜練習多久</p></div>
-    <div class="card quote"><p class="q-text">（學員回饋待補）</p><p class="q-who">— 學員稱呼｜練習多久</p></div>
+    <!-- 以下摘自 Google 地圖公開評論（2026-11-26 抓取），名字遮一字 -->
+    <div class="card quote">
+      <p class="q-text">環境整潔明亮，上課人數同時段不多，I 人友善。體驗課詳細地測試體能，正課根據個人需求安排，因材施教，令人放心。教練每堂課都會關心身體狀況，若當天有不適絕不勉強。</p>
+      <p class="q-who">— Y. Cheng｜Google 評論</p>
+    </div>
+    <div class="card quote">
+      <p class="q-text">為了讓自己的高爾夫球技更進一步來上課。教練非常專業，總是因材施教，不僅細心觀察我的揮桿動作，更針對我個人的需求與體能狀況，量身打造訓練菜單。這段時間下來，體能提升，球技也精進了不少，每次下場都更流暢、更有信心。</p>
+      <p class="q-who">— 陳○美｜Google 評論</p>
+    </div>
+    <div class="card quote">
+      <p class="q-text">環境乾淨，器材設備完整，教練很專業！一對一專屬教練很細心，訓練效果很好，值得推薦！除了高水準指導之外，還能強化自己飲食觀念。</p>
+      <p class="q-who">— 林○翊｜Google 評論</p>
+    </div>
+    <div class="card quote">
+      <p class="q-text">聽朋友介紹，雖然有點遠，我還是從台北下去。果然教練非常專業細心！教練太太也很熱情的招呼，課程中也不會很有壓力！非常棒👍</p>
+      <p class="q-who">— 鄭○容｜Google 評論</p>
+    </div>
 
     <div class="card">
       <h3>學員故事</h3>
