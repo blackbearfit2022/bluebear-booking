@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>認識藍熊｜藍熊體能</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root {
+    --blue: #0066A8;
+    --blue-dark: #004A84;
+    --blue-light: #E6EEF5;
+    --orange: #EE792C;
+    --orange-light: #FCEBDD;
+    --card: #FFFCF6;
+    --text: #363533;
+    --muted: #77736E;
+    --line: #E3DACB;
+    --bg: #F6F2EA;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-tap-highlight-color: transparent;
+  }
+  img { max-width: 100%; display: block; }
+
+  /* 頂部 */
+  header {
+    background: #FFFDF9;
+    padding: 14px 20px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header img { width: 44px; height: auto; }
+  header h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--blue-dark); line-height: 1.3; }
+  header p { margin: 0; font-size: 14px; color: var(--muted); }
+
+  /* 分頁列 */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: #FFFDF9;
+    border-bottom: 3px solid var(--orange);
+    display: flex;
+  }
+  nav button {
+    flex: 1;
+    border: 0; background: none;
+    font: inherit; font-size: 16px; font-weight: 500;
+    color: var(--muted);
+    padding: 12px 0 10px;
+    position: relative;
+    cursor: pointer;
+  }
+  nav button.on { color: var(--blue-dark); font-weight: 700; }
+  nav button.on::after {
+    content: ""; position: absolute; left: 22%; right: 22%; bottom: -3px;
+    height: 3px; background: var(--blue); border-radius: 2px;
+  }
+
+  .wrap { max-width: 520px; margin: 0 auto; padding: 0 16px 110px; }
+  section { display: none; animation: fade .25s ease; }
+  section.on { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  h2 { font-size: 22px; color: var(--blue-dark); margin: 22px 4px 6px; }
+  h3 { font-size: 19px; color: var(--blue-dark); margin: 0 0 6px; }
+  .lead { margin: 0 4px 14px; color: var(--muted); font-size: 16px; }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 18px 16px;
+    box-shadow: 0 1px 3px rgba(80,60,30,.07);
+    margin-top: 14px;
+  }
+  .card p { margin: 0; }
+  .note { font-size: 14px; color: var(--muted); margin: 10px 4px 0; }
+  .soon {
+    display: inline-block; font-size: 13px; color: var(--orange);
+    background: var(--orange-light); border-radius: 20px; padding: 2px 10px; margin-bottom: 8px;
+  }
+
+  /* 照片輪播 */
+  .gallery {
+    display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin: 0 -16px; padding: 4px 16px 8px;
+    scrollbar-width: none;
+  }
+  .gallery::-webkit-scrollbar { display: none; }
+  .gallery figure { flex: 0 0 86%; margin: 0; scroll-snap-align: center; }
+  .gallery img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; }
+  .gallery figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; text-align: center; }
+  .dots { display: flex; justify-content: center; gap: 6px; margin-top: 4px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+  .dots i.on { background: var(--blue); }
+
+  /* 影片（點了才載入） */
+  .video {
+    position: relative; width: 100%; max-width: 280px; margin: 14px auto 0;
+    aspect-ratio: 9/16; border-radius: 12px; overflow: hidden; background: #222; cursor: pointer;
+  }
+  .video img { width: 100%; height: 100%; object-fit: cover; opacity: .9; }
+  .video .play {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .video .play span {
+    width: 64px; height: 64px; border-radius: 50%; background: rgba(238,121,44,.92);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.3);
+  }
+  .video .play svg { width: 26px; height: 26px; fill: #fff; margin-left: 4px; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .vtitle { font-size: 14px; color: var(--muted); text-align: center; margin: 6px 0 0; }
+
+  /* 課程 */
+  .goal { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .goal .tag {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+    background: var(--orange-light); display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .card[id] { scroll-margin-top: 60px; }
+  .overview { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 0 -6px; }
+  .overview a {
+    background: var(--card); border-radius: 12px; padding: 10px 2px 8px;
+    box-shadow: 0 1px 3px rgba(80,60,30,.07);
+    text-decoration: none; color: var(--text);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    border: 1.5px solid transparent;
+  }
+  .overview a:active { border-color: var(--blue); }
+  .overview .tag {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--orange-light);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .overview b { font-size: 14px; letter-spacing: -0.5px; color: var(--blue-dark); white-space: nowrap; }
+  .trains { margin-top: 10px; align-items: center; }
+  .trains em { font-style: normal; font-size: 13px; color: var(--muted); margin-right: 2px; }
+  .chips.trains span { background: var(--orange-light); color: #A6501A; }
+  .hint {text-align: center; font-size: 14px; color: var(--muted); margin: 12px 0 0; }
+
+  /* 教練 */
+  .coach-top { display: flex; gap: 14px; align-items: center; }
+  .coach-top img {
+    width: 92px; height: 92px; border-radius: 50%; object-fit: cover; object-position: 50% 8%;
+    border: 3px solid var(--blue-light); flex: 0 0 auto;
+  }
+  .coach-top .nick { font-size: 21px; font-weight: 700; color: var(--blue-dark); line-height: 1.3; }
+  .coach-top .name { font-size: 15px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chips span { font-size: 13px; background: var(--blue-light); color: var(--blue-dark); border-radius: 20px; padding: 2px 10px; }
+  .certs { margin: 14px 0 0; padding: 12px 0 0; border-top: 1px dashed var(--line); list-style: none; }
+  .certs li { font-size: 15px; padding: 3px 0 3px 18px; position: relative; }
+  .certs li::before { content: ""; position: absolute; left: 2px; top: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
+  .video-soon {
+    margin-top: 14px; border: 1.5px dashed var(--line); border-radius: 12px;
+    padding: 12px; text-align: center; font-size: 14px; color: var(--muted);
+  }
+
+  /* 價目表 */
+  .price-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .price-head small { font-size: 14px; color: var(--muted); }
+  .head-coach { background: #EDE3D3; border: 1.5px solid #D6C6AE; }
+  .head-coach td { border-top-color: #D6C6AE; }
+  .head-coach th { color: #7D6A52; }
+  .head-coach .price-head small { color: #7D6A52; font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 16px; }
+  th { font-size: 14px; font-weight: 500; color: var(--muted); text-align: right; padding: 4px 4px 8px; }
+  th:first-child { text-align: left; }
+  td { padding: 10px 4px; border-top: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+  td:first-child { text-align: left; font-weight: 500; }
+  td.na { color: #BBB4A9; }
+  .trial { display: flex; gap: 10px; margin-top: 12px; }
+  .trial div {
+    flex: 1; background: var(--blue-light); border-radius: 12px; padding: 12px 8px; text-align: center;
+  }
+  .trial b { display: block; font-size: 15px; color: var(--blue-dark); }
+  .trial strong { display: block; font-size: 28px; color: var(--blue-dark); line-height: 1.3; }
+  .steps { display: flex; justify-content: space-between; margin-top: 14px; font-size: 15px; color: var(--text); }
+  .steps span { flex: 1; text-align: center; }
+  .steps span em { font-style: normal; color: var(--orange); font-weight: 700; margin-right: 2px; }
+  .steps i { color: var(--line); font-style: normal; }
+  .badge { font-size: 13px; color: var(--orange); background: var(--orange-light); border-radius: 20px; padding: 1px 8px; margin-left: 6px; font-weight: 500; vertical-align: 2px; }
+
+  /* 位置 */
+  .map { width: 100%; aspect-ratio: 4/3; border: 0; border-radius: 12px; margin-top: 12px; }
+  .btn-line {
+    display: block; text-align: center; margin-top: 12px; padding: 11px;
+    border: 1.5px solid var(--blue); border-radius: 12px; color: var(--blue);
+    text-decoration: none; font-weight: 500; font-size: 16px;
+  }
+  .info { margin: 0; padding: 0; list-style: none; }
+  .info li { display: flex; gap: 10px; padding: 8px 0; }
+  .info li + li { border-top: 1px dashed var(--line); }
+  .info b { flex: 0 0 auto; color: var(--blue-dark); font-weight: 500; width: 3.2em; }
+  .info a { color: var(--blue); }
+  .park b { display: block; color: var(--blue-dark); }
+  .park p + b { margin-top: 10px; }
+  .two { display: flex; gap: 10px; margin-top: 12px; }
+  .two img { flex: 1; min-width: 0; aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; }
+
+  /* 底部預約鈕 */
+  .cta {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 70%, rgba(246,242,234,0));
+  }
+  .cta a {
+    display: block; max-width: 488px; margin: 0 auto;
+    background: var(--orange); color: #fff; text-decoration: none; text-align: center;
+    font-size: 18px; font-weight: 700; padding: 14px; border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(238,121,44,.35);
+  }
+  .cta a small { font-weight: 400; font-size: 14px; opacity: .9; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="img/bear.png" alt="藍熊體能">
+  <div>
+    <h1>藍熊體能</h1>
+    <p>台中潭子｜一對一、一對二教練課</p>
+  </div>
+</header>
+
+<nav id="tabs">
+  <button data-tab="env">環境</button>
+  <button data-tab="course">課程</button>
+  <button data-tab="coach">教練</button>
+  <button data-tab="price">費用</button>
+  <button data-tab="map">位置</button>
+</nav>
+
+<main class="wrap">
+
+  <!-- 環境 -->
+  <section id="env">
+    <h2>教室環境</h2>
+    <p class="lead">小班制、預約制的私人教室，上課時間只有你和教練，不用跟人搶器材，也不怕被人看。</p>
+
+    <div class="gallery" id="gallery">
+      <figure><img src="img/env1.jpg" alt="訓練區" loading="lazy"><figcaption>寬敞的訓練區</figcaption></figure>
+      <figure><img src="img/env2.jpg" alt="訓練架與器材" loading="lazy"><figcaption>專業訓練架與器材</figcaption></figure>
+      <figure><img src="img/env3.jpg" alt="窗邊休息區" loading="lazy"><figcaption>明亮的窗邊休息區</figcaption></figure>
+      <figure><img src="img/env4.jpg" alt="一樓接待區" loading="lazy"><figcaption>一樓接待區</figcaption></figure>
+      <figure><img src="img/env5.jpg" alt="啞鈴壺鈴區" loading="lazy"><figcaption>啞鈴、壺鈴區</figcaption></figure>
+      <figure><img src="img/env6.jpg" alt="廁所" loading="lazy" style="object-position:50% 60%"><figcaption>乾淨的廁所</figcaption></figure>
+    </div>
+    <div class="dots" id="dots"></div>
+
+    <div class="video-soon">🎬 教室導覽影片拍攝中，敬請期待</div>
+  </section>
+
+  <!-- 課程 -->
+  <section id="course">
+    <h2>我們能幫助你什麼？</h2>
+    <p class="lead">沒有運動經驗也沒關係，藍熊的課都是一對一或一對二，教練會從基礎動作一步步帶你。透過體驗課了解你的狀況、做動作評估，再排適合你的訓練。</p>
+
+    <div class="overview">
+      <a href="#g-senior"><span class="tag">🌿</span><b>樂齡防跌</b></a>
+      <a href="#g-balance"><span class="tag">⚖️</span><b>改善失衡</b></a>
+      <a href="#g-fat"><span class="tag">🔥</span><b>減脂雕塑</b></a>
+      <a href="#g-muscle"><span class="tag">💪</span><b>增肌訓練</b></a>
+      <a href="#g-sport"><span class="tag">⛳</span><b>專項體能</b></a>
+    </div>
+    <p class="hint">點上面的目標，或往下滑看課堂實況影片 ↓</p>
+
+    <div class="card" id="g-senior">
+      <div class="goal"><span class="tag">🌿</span><h3>樂齡防跌</h3></div>
+      <p>上下樓梯腿軟、走路怕跌倒、想讓爸媽動起來。練腿力、平衡和柔軟度，讓提東西、爬樓梯、出門走走都更輕鬆。</p>
+      <div class="chips trains"><em>會練到</em><span>肌力體能</span><span>平衡感</span><span>關節活動度</span></div>
+      <div class="video" data-id="FtqF0obojBw"></div>
+      <p class="vtitle">課堂實況｜啞鈴登階練臀腿</p>
+    </div>
+
+    <div class="card" id="g-balance">
+      <div class="goal"><span class="tag">⚖️</span><h3>改善失衡</h3></div>
+      <p>身體左右力量不平均、有些動作做起來卡卡的，或是一邊特別緊、一邊特別弱。教練透過動作評估找出比較弱的地方，加強鍛鍊，讓身體用力更平均、動作更順。</p>
+      <div class="chips trains"><em>會練到</em><span>動作控制</span><span>關節活動度</span><span>肌力</span></div>
+      <div class="video-soon">🎬 課堂實況影片準備中</div>
+    </div>
+
+    <div class="card" id="g-fat">
+      <div class="goal"><span class="tag">🔥</span><h3>減脂雕塑</h3></div>
+      <p>想瘦下來、線條更好看。教練帶你用肌力訓練＋循環訓練，邊增肌邊減脂，不是只靠節食。</p>
+      <div class="chips trains"><em>會練到</em><span>減脂</span><span>肌力體能</span><span>心肺耐力</span></div>
+      <div class="video" data-id="7DVz4bvy1C4"></div>
+      <p class="vtitle">學員實況｜7 月到現在瘦了 7 公斤</p>
+    </div>
+
+    <div class="card" id="g-muscle">
+      <div class="goal"><span class="tag">💪</span><h3>增肌訓練</h3></div>
+      <p>太瘦想長肉、想練出肌肉、想變得更有力。教練教你正確的重訓動作，循序漸進加重量，安全地把肌肉練起來，練到自己也會練。</p>
+      <div class="chips trains"><em>會練到</em><span>肌肥大</span><span>最大肌力</span><span>重訓技巧</span></div>
+      <div class="video" data-id="w0oiJBTNxyU"></div>
+      <p class="vtitle">課堂實況｜史密斯硬舉 3 個重點</p>
+    </div>
+
+    <div class="card" id="g-sport">
+      <div class="goal"><span class="tag">⛳</span><h3>專項體能</h3></div>
+      <p>打高爾夫、羽球，想打得更穩、更遠、更不容易受傷。熊教練有 TPI 高爾夫體能認證，從身體旋轉、穩定度和活動度幫你提升運動表現。</p>
+      <div class="chips trains"><em>會練到</em><span>運動表現</span><span>旋轉與穩定</span><span>關節活動度</span></div>
+      <div class="video" data-id="4kWfo7gwM5c"></div>
+      <p class="vtitle">球敘熱身｜中華婦女業餘高爾夫</p>
+    </div>
+  </section>
+
+  <!-- 教練 -->
+  <section id="coach">
+    <h2>教練介紹</h2>
+
+    <div class="card">
+      <div class="coach-top">
+        <img src="img/coach-bear.jpg" alt="熊教練">
+        <div>
+          <div class="nick">熊教練</div>
+          <div class="name">廖晏崧</div>
+          <div class="chips"><span>高爾夫體能</span><span>中高齡體適能</span></div>
+        </div>
+      </div>
+      <ul class="certs">
+        <li>中國醫藥大學 運動醫學系</li>
+        <li>TPI LV1、LV2 高爾夫運動表現認證</li>
+        <li>EXOS 運動表現專家</li>
+        <li>NSCA CSCS 肌力與體能訓練專家</li>
+        <li>NSPA CSAC 速度敏捷教練</li>
+        <li>ETSU 運科教練</li>
+        <li>教育部體育署運動防護員證</li>
+        <li>國民體能指導員中級</li>
+      </ul>
+      <div class="video-soon">🎬 自我介紹影片拍攝中</div>
+    </div>
+
+    <div class="card">
+      <div class="coach-top">
+        <img src="img/coach-shrimp.jpg" alt="蝦蝦教練">
+        <div>
+          <div class="nick">蝦蝦教練</div>
+          <div class="name">許嘉仁</div>
+          <div class="chips"><span>中高齡體適能</span><span>減脂體態</span></div>
+        </div>
+      </div>
+      <ul class="certs">
+        <li>國立高雄大學 運動健康與休閒學系 碩士</li>
+        <li>肌力與體能教練丙級</li>
+        <li>銀髮族功能性體適能指導員、檢測員</li>
+        <li>AFAA FDI 國際體適能有氧舞蹈指導員</li>
+        <li>國民體適能指導員中級</li>
+      </ul>
+      <div class="video-soon">🎬 自我介紹影片拍攝中</div>
+    </div>
+  </section>
+
+  <!-- 費用 -->
+  <section id="price">
+    <h2>課程費用</h2>
+
+    <div class="card">
+      <div class="price-head"><h3>新客體驗<span class="badge">第一次來</span></h3><small>60 分鐘</small></div>
+      <div class="trial">
+        <div><b>1 對 1</b><strong>$690</strong></div>
+        <div><b>1 對 2</b><strong>$890</strong></div>
+      </div>
+      <div class="steps">
+        <span><em>1</em>評估</span><i>›</i>
+        <span><em>2</em>說明</span><i>›</i>
+        <span><em>3</em>訓練</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="price-head"><h3>正式課</h3></div>
+      <table>
+        <tr><th></th><th>40 分鐘</th><th>60 分鐘</th><th>80 分鐘</th></tr>
+        <tr><td>1 對 1</td><td>950</td><td>1,380</td><td>1,680</td></tr>
+        <tr><td>1 對 2</td><td class="na">—</td><td>1,780</td><td>2,080</td></tr>
+      </table>
+      <p class="note">40 分鐘適合體力較弱的長輩</p>
+    </div>
+
+    <div class="card head-coach">
+      <div class="price-head"><h3>總教練授課</h3><small>熊教練</small></div>
+      <table>
+        <tr><th></th><th>60 分鐘</th><th>80 分鐘</th></tr>
+        <tr><td>1 對 1｜肌力體能</td><td>1,480</td><td>1,780</td></tr>
+        <tr><td>1 對 1｜高爾夫體能</td><td>1,580</td><td>1,880</td></tr>
+        <tr><td>1 對 2｜肌力體能</td><td>1,880</td><td>2,180</td></tr>
+        <tr><td>1 對 2｜高爾夫體能</td><td>1,980</td><td>2,280</td></tr>
+      </table>
+    </div>
+
+    <p class="note">・以上為單堂價格，一期 10 堂<br>・1 對 2 為兩人同行，價格為兩人合計</p>
+  </section>
+
+  <!-- 位置 -->
+  <section id="map">
+    <h2>教室位置</h2>
+
+    <div class="card">
+      <ul class="info">
+        <li><b>地址</b><span>台中市潭子區福潭路 1 號</span></li>
+        <li><b>電話</b><a href="tel:0963580882">0963-580-882</a></li>
+        <li><b>上課</b><span>全預約制</span></li>
+      </ul>
+      <iframe class="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps?q=%E5%8F%B0%E4%B8%AD%E5%B8%82%E6%BD%AD%E5%AD%90%E5%8D%80%E7%A6%8F%E6%BD%AD%E8%B7%AF1%E8%99%9F&output=embed"></iframe>
+      <a class="btn-line" href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E4%B8%AD%E5%B8%82%E6%BD%AD%E5%AD%90%E5%8D%80%E7%A6%8F%E6%BD%AD%E8%B7%AF1%E8%99%9F" target="_blank" rel="noopener">開 Google 地圖導航</a>
+    </div>
+
+    <div class="card">
+      <h3>認明這個門口</h3>
+      <div class="two">
+        <img src="img/door.jpg" alt="藍熊體能門口" loading="lazy">
+        <img src="img/sign.jpg" alt="藍熊體能招牌" loading="lazy">
+      </div>
+    </div>
+
+    <div class="card park">
+      <h3>停車資訊</h3>
+      <b>① 74 橋下公有停車場</b>
+      <p>入口在環中東路上、靠近福貴路，10 元／半小時</p>
+      <b>② 環中東路路邊停車格</b>
+      <p>20 元／1 小時，週日不收費</p>
+    </div>
+  </section>
+
+</main>
+
+<div class="cta">
+  <a href="https://liff.line.me/2012791099-PrAed74u" id="ctaBtn">預約體驗課<small>1 對 1 只要 $690</small></a>
+</div>
+
+<script>
+  // ===== 設定 =====
+  var LIFF_ID = "2012791099-PrAed74u";
+  // 從選單／歡迎訊息打開時，用客人名義傳進聊天室的文字（網址加 ?m=xxx）
+  var MESSAGES = {
+    env: "教室環境",
+    course: "課程介紹",
+    coach: "教練介紹",
+    price: "課程費用",
+    map: "教室位置",
+    intro: "藍熊介紹"
+  };
+  var TABS = ["env", "course", "coach", "price", "map"];
+
+  // ===== 分頁切換 =====
+  var params = new URLSearchParams(location.search);
+  var viewed = {};
+  function showTab(tab, fromClick) {
+    if (TABS.indexOf(tab) < 0) tab = "env";
+    TABS.forEach(function (t) {
+      document.getElementById(t).classList.toggle("on", t === tab);
+    });
+    document.querySelectorAll("#tabs button").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.tab === tab);
+    });
+    if (fromClick) window.scrollTo({ top: 0 });
+    if (!viewed[tab]) { viewed[tab] = true; track("view", tab); }
+  }
+  document.querySelectorAll("#tabs button").forEach(function (b) {
+    b.addEventListener("click", function () { showTab(b.dataset.tab, true); });
+  });
+  showTab(params.get("tab") || "env");
+
+  // ===== 影片：點了才載入，頁面比較快 =====
+  document.querySelectorAll(".video").forEach(function (v) {
+    var id = v.dataset.id;
+    v.innerHTML = '<img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy">' +
+      '<div class="play"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg></span></div>';
+    v.addEventListener("click", function () {
+      v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id +
+        '?autoplay=1&playsinline=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+      track("video", id);
+    }, { once: true });
+  });
+
+  // ===== 照片輪播小圓點 =====
+  (function () {
+    var g = document.getElementById("gallery"), d = document.getElementById("dots");
+    var n = g.children.length;
+    for (var i = 0; i < n; i++) d.appendChild(document.createElement("i"));
+    function upd() {
+      var idx = Math.round(g.scrollLeft / (g.children[0].offsetWidth + 10));
+      [].forEach.call(d.children, function (el, i) { el.classList.toggle("on", i === idx); });
+    }
+    g.addEventListener("scroll", upd, { passive: true });
+    upd();
+  })();
+
+  document.getElementById("ctaBtn").addEventListener("click", function () { track("book_click", ""); });
+
+  // ===== 紀錄（第 3 步上線時接上 Google 試算表；預覽版先不記） =====
+  var profile = null;
+  function track(action, detail) {
+    // TODO 上線：送到 Apps Script（LINE 名稱、userId、動作、分頁、時間）
+    if (location.protocol === "file:") console.log("[track]", action, detail);
+  }
+
+  // ===== LINE 裡打開時：初始化、傳訊息進聊天室 =====
+  if (window.liff && location.protocol !== "file:") {
+    liff.init({ liffId: LIFF_ID }).then(function () {
+      if (!liff.isInClient()) return;
+      var m = params.get("m");
+      if (m && MESSAGES[m] && liff.getContext() && liff.getContext().type !== "none") {
+        liff.sendMessages([{ type: "text", text: MESSAGES[m] }]).catch(function () {});
+      }
+    }).catch(function () {});
+  }
+</script>
+</body>
+</html>
