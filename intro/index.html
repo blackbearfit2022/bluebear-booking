@@ -145,6 +145,8 @@
     display: flex; align-items: center; justify-content: center; font-size: 20px;
   }
   .overview b { font-size: 14px; letter-spacing: -0.5px; color: var(--blue-dark); white-space: nowrap; }
+  .tag svg { width: 22px; height: 22px; fill: none; stroke: var(--orange); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .goal .tag svg { width: 21px; height: 21px; }
   .trains { margin-top: 10px; align-items: center; }
   .trains em { font-style: normal; font-size: 13px; color: var(--muted); margin-right: 2px; }
   .chips.trains span { background: var(--orange-light); color: #A6501A; }
@@ -226,6 +228,13 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-senior" viewBox="0 0 24 24"><path d="M3 21h4.5v-4.5H12V12h4.5V7.5H21"/><path d="M4 13 15.5 3.5"/></symbol>
+  <symbol id="i-balance" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/></symbol>
+  <symbol id="i-fat" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+  <symbol id="i-muscle" viewBox="0 0 24 24"><path d="M6 6v12M18 6v12M2.5 9v6M21.5 9v6M6 12h12"/></symbol>
+  <symbol id="i-sport" viewBox="0 0 24 24"><path d="M12 18V3l7 3.5-7 3.5"/><path d="M6 19c0 1.1 2.7 2 6 2s6-.9 6-2-2.7-2-6-2-6 .9-6 2z"/></symbol>
+</svg>
 
 <header>
   <img src="img/bear.png" alt="藍熊體能">
@@ -269,16 +278,16 @@
     <p class="lead">沒有運動經驗也沒關係，藍熊的課都是一對一或一對二，教練會從基礎動作一步步帶你。透過體驗課了解你的狀況、做動作評估，再排適合你的訓練。</p>
 
     <div class="overview">
-      <a href="#g-senior"><span class="tag">🌿</span><b>樂齡防跌</b></a>
-      <a href="#g-balance"><span class="tag">⚖️</span><b>改善失衡</b></a>
-      <a href="#g-fat"><span class="tag">🔥</span><b>減脂雕塑</b></a>
-      <a href="#g-muscle"><span class="tag">💪</span><b>增肌訓練</b></a>
-      <a href="#g-sport"><span class="tag">⛳</span><b>專項體能</b></a>
+      <a href="#g-senior"><span class="tag"><svg><use href="#i-senior"/></svg></span><b>樂齡防跌</b></a>
+      <a href="#g-balance"><span class="tag"><svg><use href="#i-balance"/></svg></span><b>改善失衡</b></a>
+      <a href="#g-fat"><span class="tag"><svg><use href="#i-fat"/></svg></span><b>減脂雕塑</b></a>
+      <a href="#g-muscle"><span class="tag"><svg><use href="#i-muscle"/></svg></span><b>增肌訓練</b></a>
+      <a href="#g-sport"><span class="tag"><svg><use href="#i-sport"/></svg></span><b>專項體能</b></a>
     </div>
     <p class="hint">點上面的目標，或往下滑看課堂實況影片 ↓</p>
 
     <div class="card" id="g-senior">
-      <div class="goal"><span class="tag">🌿</span><h3>樂齡防跌</h3></div>
+      <div class="goal"><span class="tag"><svg><use href="#i-senior"/></svg></span><h3>樂齡防跌</h3></div>
       <p>上下樓梯腿軟、走路怕跌倒、想讓爸媽動起來。練腿力、平衡和柔軟度，讓提東西、爬樓梯、出門走走都更輕鬆。</p>
       <div class="chips trains"><em>會練到</em><span>肌力體能</span><span>平衡感</span><span>關節活動度</span></div>
       <div class="video" data-id="FtqF0obojBw"></div>
@@ -286,14 +295,14 @@
     </div>
 
     <div class="card" id="g-balance">
-      <div class="goal"><span class="tag">⚖️</span><h3>改善失衡</h3></div>
+      <div class="goal"><span class="tag"><svg><use href="#i-balance"/></svg></span><h3>改善失衡</h3></div>
       <p>身體左右力量不平均、有些動作做起來卡卡的，或是一邊特別緊、一邊特別弱。教練透過動作評估找出比較弱的地方，加強鍛鍊，讓身體用力更平均、動作更順。</p>
       <div class="chips trains"><em>會練到</em><span>動作控制</span><span>關節活動度</span><span>肌力</span></div>
       <div class="video-soon">🎬 課堂實況影片準備中</div>
     </div>
 
     <div class="card" id="g-fat">
-      <div class="goal"><span class="tag">🔥</span><h3>減脂雕塑</h3></div>
+      <div class="goal"><span class="tag"><svg><use href="#i-fat"/></svg></span><h3>減脂雕塑</h3></div>
       <p>想瘦下來、線條更好看。教練帶你用肌力訓練＋循環訓練，邊增肌邊減脂，不是只靠節食。</p>
       <div class="chips trains"><em>會練到</em><span>減脂</span><span>肌力體能</span><span>心肺耐力</span></div>
       <div class="video" data-id="7DVz4bvy1C4"></div>
@@ -301,7 +310,7 @@
     </div>
 
     <div class="card" id="g-muscle">
-      <div class="goal"><span class="tag">💪</span><h3>增肌訓練</h3></div>
+      <div class="goal"><span class="tag"><svg><use href="#i-muscle"/></svg></span><h3>增肌訓練</h3></div>
       <p>太瘦想長肉、想練出肌肉、想變得更有力。教練教你正確的重訓動作，循序漸進加重量，安全地把肌肉練起來，練到自己也會練。</p>
       <div class="chips trains"><em>會練到</em><span>肌肥大</span><span>最大肌力</span><span>重訓技巧</span></div>
       <div class="video" data-id="w0oiJBTNxyU"></div>
@@ -309,7 +318,7 @@
     </div>
 
     <div class="card" id="g-sport">
-      <div class="goal"><span class="tag">⛳</span><h3>專項體能</h3></div>
+      <div class="goal"><span class="tag"><svg><use href="#i-sport"/></svg></span><h3>專項體能</h3></div>
       <p>打高爾夫、羽球，想打得更穩、更遠、更不容易受傷。熊教練有 TPI 高爾夫體能認證，從身體旋轉、穩定度和活動度幫你提升運動表現。</p>
       <div class="chips trains"><em>會練到</em><span>運動表現</span><span>旋轉與穩定</span><span>關節活動度</span></div>
       <div class="video" data-id="4kWfo7gwM5c"></div>
