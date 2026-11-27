@@ -355,6 +355,12 @@ const srcRaw = (() => {
   return new URLSearchParams(state.split("?")[1] || "").get("src") || "menu";
 })();
 const entry = ENTRY_NAMES[srcRaw] || srcRaw;
+// 從圖文選單點開（?m=book）時，以客人名義在聊天室傳一句話
+const menuMsg = (() => {
+  const q = new URLSearchParams(location.search);
+  const state = q.get("liff.state") || "";
+  return q.get("m") || new URLSearchParams(state.split("?")[1] || "").get("m") || "";
+})() === "book" ? "預約體驗課" : "";
 
 // ===== 點選按鈕 =====
 document.querySelectorAll("section[data-type]").forEach(sec => {
@@ -533,6 +539,7 @@ if (previewMode) {
     inClient = liff.isInClient();
     const ctx = liff.getContext();
     inChat = inClient && !!ctx && ["utou", "group", "room", "square_chat"].includes(ctx.type);
+    if (inChat && menuMsg) liff.sendMessages([{ type: "text", text: menuMsg }]).catch(() => {});
     document.getElementById("formWrap").style.visibility = "visible";
     const p = await liff.getProfile();
     lineName = p.displayName;
