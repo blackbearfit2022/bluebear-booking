@@ -539,7 +539,20 @@ if (previewMode) {
     inClient = liff.isInClient();
     const ctx = liff.getContext();
     inChat = inClient && !!ctx && ["utou", "group", "room", "square_chat"].includes(ctx.type);
-    if (inChat && menuMsg) liff.sendMessages([{ type: "text", text: menuMsg }]).catch(() => {});
+    // 聊天室文字：同一支手機每天最多傳 1 次（跟介紹小網站共用）
+    const dayKey = "bb_msg_" + new Date().toLocaleDateString("sv", { timeZone: "Asia/Taipei" });
+    let sent = false; try { sent = localStorage.getItem(dayKey) === "1"; } catch (e) {}
+    if (inChat && menuMsg && !sent) {
+      liff.sendMessages([{ type: "text", text: menuMsg }])
+        .then(() => { try { localStorage.setItem(dayKey, "1"); } catch (e) {} }).catch(() => {});
+    }
+    // 瀏覽紀錄：打開表單記一筆（從介紹小網站轉過去的那一下不算）
+    const st = new URLSearchParams(location.search).get("liff.state") || "";
+    if (!st.startsWith("/intro")) {
+      fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ type: "view", action: "打開預約表單", detail: "", entry: entry,
+          accessToken: liff.getAccessToken() || "" }) }).catch(() => {});
+    }
     document.getElementById("formWrap").style.visibility = "visible";
     const p = await liff.getProfile();
     lineName = p.displayName;

@@ -526,6 +526,12 @@
   // ===== 分頁切換 =====
   var params = new URLSearchParams(location.search);
   var viewed = {};
+  // 瀏覽紀錄設定（要在第一次 showTab 之前）
+  var SHEET_URL = "https://script.google.com/macros/s/AKfycbxAQb1Krbu_4RTZED_u5T7wJhZJW-fE8a-ldyU6DkMZMlO9Th9NXCcKnDbmTMIuoz1s/exec";
+  var TAB_NAMES = { course: "課程", coach: "教練", fb: "回饋", price: "費用", map: "位置" };
+  var ACTION_NAMES = { view: "看分頁", video: "看影片", book_click: "按預約" };
+  var entry = params.get("m") ? "LINE 選單" : "其他";
+  var ready = false, queue = [];
   function showTab(tab, fromClick) {
     if (TABS.indexOf(tab) < 0) tab = "course";
     TABS.forEach(function (t) {
@@ -556,20 +562,34 @@
 
   document.getElementById("ctaBtn").addEventListener("click", function () { track("book_click", ""); });
 
-  // ===== 紀錄（第 3 步上線時接上 Google 試算表；預覽版先不記） =====
-  var profile = null;
+  // ===== 瀏覽紀錄：每一次都記進 Google 試算表「瀏覽紀錄」分頁 =====
   function track(action, detail) {
-    // TODO 上線：送到 Apps Script（LINE 名稱、userId、動作、分頁、時間）
-    if (location.protocol === "file:") console.log("[track]", action, detail);
+    var ev = { type: "view", action: ACTION_NAMES[action] || action, detail: TAB_NAMES[detail] || detail, entry: entry };
+    if (location.protocol === "file:") { console.log("[track]", ev); return; }
+    if (ready) send(ev); else queue.push(ev);
   }
+  function send(ev) {
+    ev.accessToken = liff.getAccessToken() || "";
+    if (!ev.accessToken) return;
+    fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(ev) }).catch(function () {});
+  }
+
+  // 聊天室文字：同一支手機每天最多傳 1 次（跟預約表單共用）
+  function todayKey() { return "bb_msg_" + new Date().toLocaleDateString("sv", { timeZone: "Asia/Taipei" }); }
+  function sentToday() { try { return localStorage.getItem(todayKey()) === "1"; } catch (e) { return false; } }
+  function markSent() { try { localStorage.setItem(todayKey(), "1"); } catch (e) {} }
 
   // ===== LINE 裡打開時：初始化、傳訊息進聊天室 =====
   if (window.liff && location.protocol !== "file:") {
     liff.init({ liffId: LIFF_ID }).then(function () {
+      if (!liff.isLoggedIn()) return;
+      ready = true;
+      queue.splice(0).forEach(send);
       if (!liff.isInClient()) return;
       var m = params.get("m");
-      if (m && MESSAGES[m] && liff.getContext() && liff.getContext().type !== "none") {
-        liff.sendMessages([{ type: "text", text: MESSAGES[m] }]).catch(function () {});
+      if (m && MESSAGES[m] && !sentToday() && liff.getContext() && liff.getContext().type !== "none") {
+        liff.sendMessages([{ type: "text", text: MESSAGES[m] }]).then(markSent).catch(function () {});
       }
     }).catch(function () {});
   }
