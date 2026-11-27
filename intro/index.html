@@ -190,7 +190,9 @@
   .certs { margin: 14px 0 0; padding: 12px 0 0; border-top: 1px dashed var(--line); list-style: none; }
   .certs li { font-size: 15px; padding: 3px 0 3px 18px; position: relative; }
   .certs li::before { content: ""; position: absolute; left: 2px; top: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
-  .video-soon {
+  /* 影片還沒拍好的位置先藏起來；拍好後換成影片即可 */
+  .video-soon, .soon-card { display: none; }
+  .video-soon-old {
     margin-top: 14px; border: 1.5px dashed var(--line); border-radius: 12px;
     padding: 12px; text-align: center; font-size: 14px; color: var(--muted);
   }
@@ -494,7 +496,7 @@
       <p>20 元／1 小時，週日不收費</p>
     </div>
 
-    <div class="card">
+    <div class="card soon-card">
       <h3>教室導覽</h3>
       <!-- 影片拍好後換成：<div class="video wide" data-id="YouTube影片ID"></div> -->
       <div class="video-soon">🎬 教室導覽影片拍攝中</div>
