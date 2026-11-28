@@ -135,7 +135,14 @@
     box-shadow: 0 2px 10px rgba(0,0,0,.3);
   }
   .video .play svg { width: 26px; height: 26px; fill: #fff; margin-left: 4px; }
-  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .video iframe, .video .yt { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  /* 靜音自動播放時蓋在影片上：點一下開聲音 */
+  .video .cover { position: absolute; inset: 0; z-index: 2; background: transparent; }
+  .video .cover b {
+    position: absolute; top: 10px; right: 10px; padding: 5px 10px; border-radius: 20px;
+    background: rgba(0,0,0,.6); color: #fff; font-size: 13px; font-weight: 500;
+  }
+  .video.playing > img, .video.playing > .play { display: none; }
   .video.wide { max-width: none; aspect-ratio: 16/9; }
   .vtitle { font-size: 14px; color: var(--muted); text-align: center; margin: 6px 0 0; }
 
@@ -548,17 +555,102 @@
   });
   showTab(params.get("tab") || "course");
 
-  // ===== 影片：點了才載入，頁面比較快 =====
-  document.querySelectorAll(".video").forEach(function (v) {
+  // ===== 影片：滑到畫面中間就靜音自動播放，滑走就暫停；點一下開聲音 =====
+  // 同一時間只播 1 部。手機不讓自動播放時，就顯示 YouTube 自己的播放鍵讓客人點。
+  // 「看影片」紀錄：客人開了聲音（或自己按播放）才記，每部影片記 1 次。
+  var videos = [].slice.call(document.querySelectorAll(".video"));
+  var current = null; // 正在播的那部
+  videos.forEach(function (v) {
     var id = v.dataset.id;
     v.innerHTML = '<img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy">' +
       '<div class="play"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg></span></div>';
-    v.addEventListener("click", function () {
-      v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id +
-        '?autoplay=1&playsinline=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
-      track("video", id);
-    }, { once: true });
   });
+
+  function makePlayer(v) {
+    var id = v.dataset.id;
+    var box = document.createElement("div");
+    box.className = "yt";
+    v.appendChild(box);
+    var cover = document.createElement("div");
+    cover.className = "cover";
+    cover.innerHTML = "<b>🔇 點一下開聲音</b>";
+    v.appendChild(cover);
+    v._tracked = false;
+    function markWatched() {
+      if (!v._tracked) { v._tracked = true; track("video", id); }
+    }
+    // 客人點影片：開聲音、從頭播，拿掉遮罩，之後用 YouTube 自己的按鈕
+    cover.addEventListener("click", function () {
+      var p = v._player;
+      if (p && p.unMute) { p.unMute(); p.setVolume(100); p.seekTo(0, true); p.playVideo(); }
+      cover.remove();
+      playOnly(v);
+      markWatched();
+    });
+    v._player = new YT.Player(box, {
+      host: "https://www.youtube-nocookie.com",
+      videoId: id,
+      playerVars: { autoplay: 1, mute: 1, playsinline: 1, rel: 0, loop: 1, playlist: id },
+      events: {
+        onReady: function (e) {
+          e.target.mute();
+          if (v._want) e.target.playVideo(); else e.target.pauseVideo();
+          // 2 秒後還沒開始播 → 這支手機不讓自動播放，改成讓客人自己按播放鍵（有聲音）
+          setTimeout(function () {
+            if (e.target.getPlayerState && e.target.getPlayerState() !== YT.PlayerState.PLAYING && v._want) {
+              e.target.unMute();
+              cover.remove();
+            }
+          }, 2000);
+        },
+        onStateChange: function (e) {
+          if (e.data === YT.PlayerState.PLAYING) {
+            v.classList.add("playing");
+            if (current && current !== v) pauseVideo(current);
+            current = v;
+            if (!e.target.isMuted()) markWatched();
+          }
+        }
+      }
+    });
+  }
+
+  function pauseVideo(v) {
+    v._want = false;
+    if (v._player && v._player.pauseVideo) v._player.pauseVideo();
+  }
+  function playOnly(v) {
+    videos.forEach(function (o) { if (o !== v) pauseVideo(o); });
+    v._want = true;
+    current = v;
+    if (!v._player) { makePlayer(v); return; }
+    if (v._player.playVideo) v._player.playVideo();
+  }
+
+  var ytReady = false, pending = [];
+  window.onYouTubeIframeAPIReady = function () {
+    ytReady = true;
+    pending.splice(0).forEach(playOnly);
+  };
+  var ytScript = document.createElement("script");
+  ytScript.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(ytScript);
+
+  // 影片有 6 成進到畫面裡才算「滑到」；切到別的分頁時影片看不到，也會自動暫停
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      var v = en.target;
+      if (en.isIntersecting) {
+        if (ytReady) playOnly(v); else if (pending.indexOf(v) < 0) pending.push(v);
+      } else {
+        var i = pending.indexOf(v);
+        if (i >= 0) pending.splice(i, 1);
+        pauseVideo(v);
+        if (current === v) current = null;
+      }
+    });
+  }, { threshold: 0.6 });
+  videos.forEach(function (v) { io.observe(v); });
 
   document.getElementById("ctaBtn").addEventListener("click", function () { track("book_click", ""); });
 
