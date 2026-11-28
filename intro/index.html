@@ -564,6 +564,19 @@
     var id = v.dataset.id;
     v.innerHTML = '<img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy">' +
       '<div class="play"><span><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z"/></svg></span></div>';
+    // 還沒開始自動播放就被點：有 YouTube 程式就直接有聲播放；沒有就退回舊做法（點了才載入）
+    v.addEventListener("click", function () {
+      if (v._player) return;
+      if (!ytReady) {
+        v._player = {};
+        v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id +
+          '?autoplay=1&playsinline=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+        track("video", id);
+        return;
+      }
+      v._unmuteOnReady = true;
+      playOnly(v);
+    });
   });
 
   function makePlayer(v) {
@@ -593,6 +606,7 @@
       playerVars: { autoplay: 1, mute: 1, playsinline: 1, rel: 0, loop: 1, playlist: id },
       events: {
         onReady: function (e) {
+          if (v._unmuteOnReady) { e.target.unMute(); cover.remove(); e.target.playVideo(); markWatched(); return; }
           e.target.mute();
           if (v._want) e.target.playVideo(); else e.target.pauseVideo();
           // 2 秒後還沒開始播 → 這支手機不讓自動播放，改成讓客人自己按播放鍵（有聲音）
