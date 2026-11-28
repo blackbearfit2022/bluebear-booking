@@ -536,11 +536,65 @@
   // 瀏覽紀錄設定（要在第一次 showTab 之前）
   var SHEET_URL = "https://script.google.com/macros/s/AKfycbxAQb1Krbu_4RTZED_u5T7wJhZJW-fE8a-ldyU6DkMZMlO9Th9NXCcKnDbmTMIuoz1s/exec";
   var TAB_NAMES = { course: "課程", coach: "教練", fb: "回饋", price: "費用", map: "位置" };
-  var ACTION_NAMES = { view: "看分頁", video: "看影片", book_click: "按預約" };
+  var ACTION_NAMES = { view: "看分頁", video: "看影片", book_click: "按預約", video_play: "影片播放", stay: "停留" };
   var entry = params.get("m") ? "LINE 選單" : "其他";
   var ready = false, queue = [];
+
+  // ===== 停留時間＋滑到哪裡：關掉（或切到別的 App）時記 1 筆「停留」 =====
+  var curTab = null, tabStart = 0, pageVisible = true;
+  var tabTime = {}, tabDepth = {}, tabOrder = [];
+  function secText(ms) {
+    var s = Math.round(ms / 1000);
+    return s < 60 ? s + " 秒" : Math.floor(s / 60) + " 分 " + (s % 60) + " 秒";
+  }
+  function stopTabClock() {
+    if (curTab && tabStart) { tabTime[curTab] = (tabTime[curTab] || 0) + (Date.now() - tabStart); }
+    tabStart = 0;
+  }
+  function startTabClock(tab) {
+    curTab = tab;
+    if (tabOrder.indexOf(tab) < 0) tabOrder.push(tab);
+    tabStart = pageVisible ? Date.now() : 0;
+    updateDepth();
+  }
+  function updateDepth() {
+    if (!curTab) return;
+    var sec = document.getElementById(curTab);
+    if (!sec || !sec.offsetHeight) return;
+    var seen = (window.scrollY + window.innerHeight - sec.offsetTop) / sec.offsetHeight;
+    var pct = Math.max(0, Math.min(100, Math.round(seen * 100)));
+    if (!(tabDepth[curTab] >= pct)) tabDepth[curTab] = pct;
+  }
+  window.addEventListener("scroll", updateDepth, { passive: true });
+  function sendStay() {
+    stopTabClock();
+    flushAllVideos();
+    var total = 0, parts = [];
+    tabOrder.forEach(function (t) {
+      var ms = tabTime[t] || 0;
+      if (ms < 1000) return;
+      total += ms;
+      parts.push(TAB_NAMES[t] + " " + secText(ms) + "（滑到 " + (tabDepth[t] || 0) + "%）");
+    });
+    if (total >= 2000) track("stay", "共 " + secText(total) + "｜" + parts.join("、"), true);
+    // 計時歸零：客人回來再離開，只記新的這段，不重複算
+    tabTime = {}; tabOrder = curTab ? [curTab] : [];
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") { pageVisible = false; sendStay(); }
+    else {
+      pageVisible = true;
+      if (curTab) tabStart = Date.now();
+      videos.forEach(function (v) {
+        if (v._player && v._player.getPlayerState && v._player.getPlayerState() === 1 && !v._t0) v._t0 = Date.now();
+      });
+    }
+  });
+  window.addEventListener("pagehide", function () { if (pageVisible) { pageVisible = false; sendStay(); } });
+
   function showTab(tab, fromClick) {
     if (TABS.indexOf(tab) < 0) tab = "course";
+    stopTabClock();
     TABS.forEach(function (t) {
       document.getElementById(t).classList.toggle("on", t === tab);
     });
@@ -548,6 +602,7 @@
       b.classList.toggle("on", b.dataset.tab === tab);
     });
     if (fromClick) window.scrollTo({ top: 0 });
+    startTabClock(tab);
     if (!viewed[tab]) { viewed[tab] = true; track("view", tab); }
   }
   document.querySelectorAll("#tabs button").forEach(function (b) {
@@ -618,6 +673,10 @@
           }, 2000);
         },
         onStateChange: function (e) {
+          // 播放秒數：開始播就計時，停下來就加總；暫停（滑走）時記 1 筆「影片播放」
+          if (e.data === YT.PlayerState.PLAYING) { if (!v._t0) v._t0 = Date.now(); }
+          else if (v._t0) { v._acc = (v._acc || 0) + (Date.now() - v._t0); v._t0 = 0; }
+          if (e.data === YT.PlayerState.PAUSED) flushVideo(v);
           if (e.data === YT.PlayerState.PLAYING) {
             v.classList.add("playing");
             if (current && current !== v) pauseVideo(current);
@@ -628,6 +687,21 @@
       }
     });
   }
+
+  // 影片名稱：課程分頁用目標名稱（樂齡防跌…），其他用影片下面的小標題
+  function videoName(v) {
+    var goal = v.parentElement && v.parentElement.querySelector(".goal h3");
+    if (goal) return goal.textContent.trim();
+    var t = v.nextElementSibling;
+    return t && t.classList.contains("vtitle") ? t.textContent.trim() : v.dataset.id;
+  }
+  // 播超過 3 秒才記，滑過去一下不算
+  function flushVideo(v) {
+    if (v._t0) { v._acc = (v._acc || 0) + (Date.now() - v._t0); v._t0 = pageVisible ? Date.now() : 0; }
+    if ((v._acc || 0) >= 3000) track("video_play", videoName(v) + " " + secText(v._acc), true);
+    v._acc = 0;
+  }
+  function flushAllVideos() { videos.forEach(flushVideo); }
 
   function pauseVideo(v) {
     v._want = false;
@@ -669,15 +743,17 @@
   document.getElementById("ctaBtn").addEventListener("click", function () { track("book_click", ""); });
 
   // ===== 瀏覽紀錄：每一次都記進 Google 試算表「瀏覽紀錄」分頁 =====
-  function track(action, detail) {
+  // leaving＝客人正在關網頁，用 keepalive 讓訊息關掉後也送得出去
+  function track(action, detail, leaving) {
     var ev = { type: "view", action: ACTION_NAMES[action] || action, detail: TAB_NAMES[detail] || detail, entry: entry };
-    if (location.protocol === "file:") { console.log("[track]", ev); return; }
-    if (ready) send(ev); else queue.push(ev);
+    if (location.protocol === "file:" || !window.liff) { console.log("[track]", ev); return; }
+    if (ready) send(ev, leaving); else queue.push(ev);
   }
-  function send(ev) {
+  function send(ev, leaving) {
     ev.accessToken = liff.getAccessToken() || "";
     if (!ev.accessToken) return;
-    fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    fetch(SHEET_URL, { method: "POST", mode: "no-cors", keepalive: !!leaving,
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(ev) }).catch(function () {});
   }
 
