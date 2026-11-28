@@ -540,9 +540,9 @@
   var entry = params.get("m") ? "LINE 選單" : "其他";
   var ready = false, queue = [];
 
-  // ===== 停留時間＋滑到哪裡：關掉（或切到別的 App）時記 1 筆「停留」 =====
+  // ===== 停留時間：關掉（或切到別的 App）時記 1 筆「停留」 =====
   var curTab = null, tabStart = 0, pageVisible = true;
-  var tabTime = {}, tabDepth = {}, tabOrder = [];
+  var tabTime = {}, tabOrder = [];
   function secText(ms) {
     var s = Math.round(ms / 1000);
     return s < 60 ? s + " 秒" : Math.floor(s / 60) + " 分 " + (s % 60) + " 秒";
@@ -555,17 +555,7 @@
     curTab = tab;
     if (tabOrder.indexOf(tab) < 0) tabOrder.push(tab);
     tabStart = pageVisible ? Date.now() : 0;
-    updateDepth();
   }
-  function updateDepth() {
-    if (!curTab) return;
-    var sec = document.getElementById(curTab);
-    if (!sec || !sec.offsetHeight) return;
-    var seen = (window.scrollY + window.innerHeight - sec.offsetTop) / sec.offsetHeight;
-    var pct = Math.max(0, Math.min(100, Math.round(seen * 100)));
-    if (!(tabDepth[curTab] >= pct)) tabDepth[curTab] = pct;
-  }
-  window.addEventListener("scroll", updateDepth, { passive: true });
   function sendStay() {
     stopTabClock();
     flushAllVideos();
@@ -574,7 +564,7 @@
       var ms = tabTime[t] || 0;
       if (ms < 1000) return;
       total += ms;
-      parts.push(TAB_NAMES[t] + " " + secText(ms) + "（滑到 " + (tabDepth[t] || 0) + "%）");
+      parts.push(TAB_NAMES[t] + " " + secText(ms));
     });
     if (total >= 2000) track("stay", "共 " + secText(total) + "｜" + parts.join("、"), true);
     // 計時歸零：客人回來再離開，只記新的這段，不重複算
